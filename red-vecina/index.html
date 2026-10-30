@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Red Vecina · Prototipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="contenedor">
+    <a class="logo" href="#inicio" aria-label="Red Vecina, ir al inicio">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 2 18h5v18h26V18h5z" fill="#2F5D3A"/><path d="M28 5h5v9l-5-4z" fill="#2F5D3A"/><circle cx="15" cy="21" r="3.2" fill="#B9DDAF"/><circle cx="25" cy="21" r="3.2" fill="#B9DDAF"/><path d="M9.5 33c0-4 2.5-7 5.5-7s5.5 3 5.5 7zM19.5 33c0-4 2.5-7 5.5-7s5.5 3 5.5 7z" fill="#B9DDAF"/></svg>
+      Red Vecina
+    </a>
+    <nav class="principal" aria-label="Principal">
+      <a href="#inicio" data-nav="inicio">Inicio</a>
+      <a href="#buscar" data-nav="buscar">Trabajadores</a>
+      <a href="#favoritos" data-nav="favoritos">Favoritos</a>
+      <a href="#nosotros" data-nav="nosotros">Nosotros</a>
+    </nav>
+    <div class="acciones-top">
+      <button class="tema-btn" id="temaBtn" aria-label="Cambiar tema claro u oscuro">◐</button>
+      <div id="zonaCuenta" style="display:flex;gap:8px;align-items:center"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- INICIO -->
+<section class="vista" data-view="inicio">
+  <div class="hero">
+    <svg class="hero-ilustracion" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <path d="M0 330 Q200 220 420 290 T820 250 T1200 230 V480 H0z" fill="#ffffff" opacity=".06"/>
+      <path d="M0 390 Q260 300 520 360 T1000 330 T1200 340 V480 H0z" fill="#ffffff" opacity=".08"/>
+      <line x1="600" y1="80" x2="1200" y2="220" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>
+      <g fill="#fff" fill-opacity=".5"><rect x="760" y="112" width="26" height="18" rx="4"/><line x1="773" y1="104" x2="773" y2="112" stroke="#fff" stroke-opacity=".5" stroke-width="2"/><rect x="980" y="164" width="26" height="18" rx="4"/><line x1="993" y1="156" x2="993" y2="164" stroke="#fff" stroke-opacity=".5" stroke-width="2"/></g>
+      <g fill="#B9DDAF" fill-opacity=".22">
+        <rect x="640" y="300" width="46" height="40"/><rect x="690" y="285" width="38" height="55"/><rect x="732" y="296" width="52" height="44"/><rect x="788" y="275" width="40" height="65"/><rect x="832" y="290" width="48" height="50"/><rect x="884" y="270" width="36" height="70"/><rect x="924" y="282" width="50" height="58"/><rect x="978" y="262" width="42" height="78"/><rect x="1024" y="276" width="46" height="64"/><rect x="1074" y="258" width="40" height="82"/><rect x="1118" y="272" width="50" height="68"/>
+      </g>
+      <g fill="#E8C9A4" fill-opacity=".35">
+        <rect x="660" y="360" width="56" height="50"/><rect x="722" y="348" width="44" height="62"/><rect x="772" y="366" width="60" height="44"/><rect x="838" y="342" width="48" height="68"/><rect x="892" y="358" width="58" height="52"/><rect x="956" y="338" width="46" height="72"/><rect x="1008" y="354" width="56" height="56"/><rect x="1070" y="334" width="50" height="76"/><rect x="1126" y="350" width="60" height="60"/>
+      </g>
+      <g fill="#2F5D3A" fill-opacity=".5"><rect x="0" y="430" width="1200" height="50"/></g>
+    </svg>
+    <div class="contenedor">
+      <h1>Encuentra ayuda cerca de casa.</h1>
+      <p class="lead">Conecta con trabajadores de confianza en tu barrio y resuelve esos arreglos que necesitas, rápido y fácil.</p>
+      <form class="buscador" id="formHero" role="search">
+        <label><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="heroQ" type="text" placeholder="¿Qué servicio necesitas?" aria-label="Servicio que necesitas"></label>
+        <label><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><input id="heroS" type="text" placeholder="Tu barrio o sector" aria-label="Tu barrio o sector"></label>
+        <button class="btn btn-primario" type="submit" aria-label="Buscar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      </form>
+      <div class="categorias" id="catsHero"></div>
+    </div>
+  </div>
+
+  <div class="seccion">
+    <div class="contenedor">
+      <div class="seccion-cab">
+        <div><h2>Trabajadores destacados</h2><p>Personas de tu barrio, con experiencia y buenas calificaciones.</p></div>
+        <a href="#buscar" class="btn btn-texto" style="color:var(--verde)">Ver todos</a>
+      </div>
+      <div class="grid-trab" id="destacados"></div>
+    </div>
+  </div>
+
+  <div class="seccion" style="padding-top:0">
+    <div class="contenedor">
+      <div class="seccion-cab"><div><h2>Así funciona</h2><p>Del daño en la casa a la solución, en cuatro pasos.</p></div></div>
+      <div class="pasos">
+        <div class="paso"><b>1</b><h3>Elige el servicio</h3><p>Plomería, electricidad, electrodomésticos u otros oficios.</p></div>
+        <div class="paso"><b>2</b><h3>Mira quién está cerca</h3><p>En el mapa o la lista ves la distancia aproximada, nunca la dirección exacta.</p></div>
+        <div class="paso"><b>3</b><h3>Revisa sus trabajos</h3><p>Fotos de antes y después y opiniones de otros vecinos.</p></div>
+        <div class="paso"><b>4</b><h3>Contacta y califica</h3><p>Cuando termine el trabajo, tu calificación ayuda al siguiente vecino.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="seccion banda">
+    <div class="contenedor">
+      <div>
+        <h2>¿Haces arreglos en tu barrio?</h2>
+        <p>Crea tu perfil gratis, sube fotos de los trabajos que ya hiciste y deja que tus vecinos te encuentren. Tu trabajo habla por ti.</p>
+        <a href="#registro" class="btn btn-primario" data-rol="trabajador">Registrarme como trabajador</a>
+      </div>
+      <div class="aviso" style="font-size:.88rem;line-height:1.6">
+        <strong>Opiniones de vecinos reales.</strong><br>
+        Solo puede calificar quien contactó y contrató al trabajador desde Red Vecina. Así se evitan reseñas de cuentas anónimas o de conocidos.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTADOS -->
+<section class="vista" data-view="buscar">
+  <div class="cab-resultados">
+    <div class="contenedor">
+      <h1>Resultados de búsqueda</h1>
+      <p id="resumenRes">Buscando trabajadores…</p>
+      <form class="buscador" id="formRes" role="search">
+        <label><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="resQ" type="text" placeholder="¿Qué servicio necesitas?" aria-label="Servicio"></label>
+        <label><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><input id="resS" type="text" placeholder="Tu barrio o sector" aria-label="Sector"></label>
+        <button class="btn btn-primario" type="submit" aria-label="Buscar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      </form>
+    </div>
+  </div>
+  <div class="contenedor layout-res">
+    <aside class="filtros" aria-label="Filtros">
+      <h2>Filtrar por</h2>
+      <h3>Categoría</h3>
+      <div id="filtroCats"></div>
+      <h3>Distancia</h3>
+      <select id="filtroDist" aria-label="Distancia máxima">
+        <option value="99999">Cualquier distancia</option>
+        <option value="1000">Hasta 1 km</option>
+        <option value="2000">Hasta 2 km</option>
+        <option value="3000">Hasta 3 km</option>
+      </select>
+      <h3>Calificación mínima</h3>
+      <select id="filtroRating" aria-label="Calificación mínima">
+        <option value="0">Cualquier calificación</option>
+        <option value="4.5">4,5 o más</option>
+        <option value="4.8">4,8 o más</option>
+      </select>
+      <h3>Ordenar</h3>
+      <select id="orden" aria-label="Ordenar resultados">
+        <option value="dist">Más cercanos</option>
+        <option value="rating">Mejor calificados</option>
+      </select>
+      <button class="link" id="limpiar" type="button">Limpiar filtros</button>
+    </aside>
+    <div>
+      <div class="mapa-wrap">
+        <div class="mapa-nota"><strong>Tu ubicación</strong><br>Las distancias son aproximadas para proteger los datos de cada persona.</div>
+        <svg id="mapa" viewBox="0 0 800 300" role="img" aria-label="Mapa con trabajadores cercanos"></svg>
+      </div>
+      <div class="lista-res" id="listaRes"></div>
+    </div>
+  </div>
+</section>
+
+<!-- PERFIL -->
+<section class="vista" data-view="perfil">
+  <div class="contenedor">
+    <button class="volver" id="btnVolver" type="button">← Volver a resultados</button>
+    <div id="perfilCont"></div>
+  </div>
+</section>
+
+<!-- FAVORITOS -->
+<section class="vista" data-view="favoritos">
+  <div class="seccion">
+    <div class="contenedor">
+      <div class="seccion-cab"><div><h2>Tus favoritos</h2><p>Los trabajadores que guardaste para tenerlos a la mano.</p></div></div>
+      <div class="grid-trab" id="gridFav"></div>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTRO -->
+<section class="vista" data-view="registro">
+  <form class="registro" id="formReg" novalidate>
+    <h1>Únete a la comunidad</h1>
+    <p class="sub">Elige cómo quieres participar</p>
+    <div class="roles">
+      <button type="button" class="rol" data-r="trabajador" aria-pressed="true">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0H6z"/><rect x="5" y="8" width="14" height="2" rx="1"/><circle cx="12" cy="12.5" r="3.2"/><path d="M4 22c0-4.4 3.6-6.5 8-6.5s8 2.1 8 6.5z"/></svg>
+        <strong>Soy trabajador</strong><span>Quiero ofrecer mis servicios y encontrar nuevos clientes.</span>
+      </button>
+      <button type="button" class="rol" data-r="habitante" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3 2 11h3v10h5v-6h4v6h5V11h3z"/></svg>
+        <strong>Soy habitante</strong><span>Busco trabajadores para mi hogar o mi barrio.</span>
+      </button>
+    </div>
+    <div class="campo" data-c="nombre"><label for="rNombre">Nombre completo <span class="req">*</span></label><input id="rNombre" type="text" placeholder="Tu nombre" autocomplete="name"><div class="error">Escribe tu nombre y apellido.</div></div>
+    <div class="campo" data-c="tel"><label for="rTel">Número de contacto <span class="req">*</span></label><input id="rTel" type="tel" placeholder="Tu número de celular" inputmode="numeric" autocomplete="tel"><div class="error">Escribe un celular de 10 dígitos que empiece por 3.</div></div>
+    <div class="campo" data-c="sector"><label for="rSector">Barrio o sector <span class="req">*</span></label><input id="rSector" type="text" placeholder="Ej. Robledo, Manrique, Belén"><div class="error">Escribe tu barrio para mostrarte lo que tienes cerca.</div></div>
+    <div id="camposTrab">
+      <div class="campo" data-c="esp"><label for="rEsp">¿Cuál es tu especialidad? <span class="req">*</span></label>
+        <select id="rEsp"><option value="">Selecciona una opción</option><option value="plomeria">Plomería</option><option value="electricidad">Electricidad</option><option value="electrodomesticos">Electrodomésticos</option><option value="otros">Otros servicios</option></select>
+        <div class="error">Elige tu especialidad.</div></div>
+      <div class="campo"><label for="rAnos">Años de experiencia</label><input id="rAnos" type="text" inputmode="numeric" placeholder="Ej. 5"></div>
+      <div class="campo"><label for="rSobre">Cuéntale a tus vecinos qué haces</label><textarea id="rSobre" placeholder="Ej. Arreglo fugas, instalo grifos y destapo cañerías."></textarea></div>
+    </div>
+    <label class="consent" id="consentWrap"><input type="checkbox" id="rConsent"><span>Autorizo el tratamiento de mis datos personales según la Ley 1581 de 2012. Red Vecina muestra solo mi distancia aproximada, nunca mi dirección exacta. <a href="#nosotros">Política de privacidad</a></span></label>
+    <div class="error" id="errConsent" style="margin:-10px 0 14px">Necesitamos tu autorización para crear la cuenta.</div>
+    <button class="btn btn-primario" type="submit" style="width:100%;padding:13px">Crear cuenta</button>
+  </form>
+</section>
+
+<!-- NOSOTROS -->
+<section class="vista" data-view="nosotros">
+  <div class="seccion">
+    <div class="contenedor">
+      <div class="seccion-cab"><div><h2>Por qué existe Red Vecina</h2><p>El problema no es que falten trabajadores en los barrios, es que no sabemos quiénes son ni cómo trabajan.</p></div></div>
+      <div class="nos-grid">
+        <div class="panel"><div class="cifra">15 %</div><p>de los colombianos considera que se puede confiar en la mayoría de las personas.</p><div class="cita">Latinobarómetro, reportado por Portafolio (Rodríguez, 2025)</div></div>
+        <div class="panel"><div class="cifra">1 de 10</div><p>personas en América Latina y el Caribe confía en los demás.</p><div class="cita">Keefer y Scartascini, BID (2022)</div></div>
+        <div class="panel"><div class="cifra">54,5 %</div><p>fue la informalidad laboral nacional en julio de 2026. Muchos oficios no tienen una página o registro donde ver su experiencia.</p><div class="cita">DANE, vía INCP (2026)</div></div>
+      </div>
+      <div class="seccion-cab" style="margin-top:40px"><div><h2>Lo que buscamos</h2></div></div>
+      <div class="pasos">
+        <div class="paso"><h3>Reputación visible</h3><p>Las calificaciones dejan a la vista el comportamiento pasado, y eso reduce el riesgo de contratar a alguien que no conoces.</p></div>
+        <div class="paso"><h3>Cercanía</h3><p>Un trabajador del barrio llega más rápido, cobra menos desplazamiento y cuida su nombre entre sus vecinos.</p></div>
+        <div class="paso"><h3>Economía local</h3><p>Una vitrina gratuita para trabajadores independientes que no tienen cómo pagar publicidad.</p></div>
+        <div class="paso"><h3>Comunidad</h3><p>Conectar vecinos que no se conocían, aunque sea por un daño en la casa, ayuda a reconstruir la confianza.</p></div>
+      </div>
+      <div class="panel" style="margin-top:28px">
+        <h2>Tus datos, protegidos</h2>
+        <p style="margin:0;color:var(--texto-2);font-size:.9rem">Cumplimos la Ley 1581 de 2012: pedimos tu autorización antes de usar tus datos, mostramos solo distancias aproximadas y nunca publicamos direcciones exactas. Red Vecina no garantiza por sí sola la calidad de un trabajo, te da información para decidir mejor.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="contenedor">
+    <div><strong>Red Vecina</strong><br>Cerca de ti, cuando lo necesitas.</div>
+    <div>Prototipo académico · TIC Competencias Digitales<br>Institución Universitaria Pascual Bravo, Medellín 2026</div>
+  </div>
+</footer>
+
+<nav class="tabbar" aria-label="Navegación móvil">
+  <a href="#inicio" data-nav="inicio"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 2 11h3v10h5v-6h4v6h5V11h3z"/></svg>Inicio</a>
+  <a href="#buscar" data-nav="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Buscar</a>
+  <a href="#favoritos" data-nav="favoritos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Favoritos</a>
+  <a href="#registro" data-nav="registro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>Perfil</a>
+</nav>
+
+<dialog id="dlgContacto"><div class="modal-cuerpo" id="dlgContactoCuerpo"></div></dialog>
+<dialog id="dlgCalificar"><div class="modal-cuerpo" id="dlgCalificarCuerpo"></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
