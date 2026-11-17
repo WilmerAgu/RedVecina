@@ -218,7 +218,13 @@ const BASE = [
    sobre:"Carpintero de Santa Elena. Puertas, ventanas, pérgolas y muebles en madera de la región.",
    trabajos:["Ajuste de puertas","Closets a la medida","Reparación de muebles"],
    galeria:[{f:"carpinteria",c:"Trabajo de carpintería"}],
-   res:[{a:"Beatriz Arango",t:"Muy amable y cuidadoso dentro de la casa.",c:5,h:"Hace 1 mes"},{a:"Juan Camilo Ortiz",t:"Quedó bien. Volvería a llamarlo.",c:4,h:"Hace 2 meses"}]}
+   res:[{a:"Beatriz Arango",t:"Muy amable y cuidadoso dentro de la casa.",c:5,h:"Hace 1 mes"},{a:"Juan Camilo Ortiz",t:"Quedó bien. Volvería a llamarlo.",c:4,h:"Hace 2 meses"}]},
+  // Perfil real del autor del prototipo. El celular es de ejemplo: con él se puede iniciar sesión.
+  {id:"wilmer", nombre:"Wilmer Agudelo", cat:"plomeria", titulo:"Plomero", rating:0, n:0, comuna:2, barrio:"La Francia", ang:20, anos:4, tel:"300 000 0038", color:"#2F5D3A", nuevo:true,
+   sobre:"Arreglo daños en tubería, instalo duchas, hago cualquier tipo de cambio e instalo lavaderos, sanitarios, lavamanos, etc.",
+   trabajos:["Arreglo de daños en tubería","Instalación de duchas","Instalación de lavaderos","Instalación de sanitarios y lavamanos"],
+   galeria:[],
+   res:[]}
 ];
 
 let extras = store.get("trabajadores", []);
@@ -231,8 +237,8 @@ let cuentas = store.get("cuentas", {});
 const soloDigitos = s => String(s || "").replace(/\D/g, "");
 function buscarCuenta(tel){
   if(cuentas[tel]) return cuentas[tel];
-  // Trabajadores creados antes de que existiera el registro de cuentas
-  const t = extras.find(x => soloDigitos(x.tel) === tel);
+  // Trabajadores sin cuenta registrada: perfiles creados antes de las cuentas o perfiles fijos del código
+  const t = todos().find(x => soloDigitos(x.tel) === tel);
   if(t){
     cuentas[tel] = { nombre: t.nombre, rol: "trabajador", sector: t.sector, comuna: t.comuna, barrio: t.barrio, tel, tid: t.id };
     store.set("cuentas", cuentas);
@@ -241,7 +247,8 @@ function buscarCuenta(tel){
   return null;
 }
 
-const todos = () => BASE.concat(extras);
+let ocultos = new Set(store.get("ocultos", []));   // perfiles fijos cuya cuenta se eliminó en este navegador
+const todos = () => BASE.filter(b => !ocultos.has(b.id) && !extras.some(e => e.id === b.id)).concat(extras);
 const buscarT = id => todos().find(t => t.id === id);
 
 function ratingDe(t){
@@ -583,7 +590,7 @@ function completitud(t){
 }
 
 function pintarPerfil(id){
-  const t = buscarT(id);
+  const t = usuario && usuario.tid === id ? (miTrabajador() || buscarT(id)) : buscarT(id);
   const cont = document.getElementById("perfilCont");
   document.getElementById("btnVolver").hidden = esPropio(t);
   if(!t){ cont.innerHTML = `<div class="vacio" style="margin-bottom:48px"><strong>Este perfil ya no está disponible.</strong><br><a href="#buscar">Busca otros trabajadores cerca de ti</a></div>`; return; }
@@ -771,7 +778,15 @@ function conectarGaleriaPropia(t){
 }
 
 /* ---------- Editar perfil / datos de la cuenta ---------- */
-const miTrabajador = () => usuario && usuario.tid ? extras.find(x => x.id === usuario.tid) : null;
+function miTrabajador(){
+  if(!usuario || !usuario.tid) return null;
+  let t = extras.find(x => x.id === usuario.tid);
+  if(!t){
+    const fijo = BASE.find(x => x.id === usuario.tid);
+    if(fijo){ t = JSON.parse(JSON.stringify(fijo)); extras.push(t); }   // se guarda en el primer cambio
+  }
+  return t || null;
+}
 const fmtTel = tel => tel.replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
 const opcionesEsp = sel => CATS.map(c => `<option value="${c.k}" ${c.k===sel?"selected":""}>${c.label}</option>`).join("");
 
@@ -894,6 +909,7 @@ function eliminarCuenta(){
   if(!confirm(msg)) return;
   if(t){
     extras = extras.filter(x => x.id !== t.id); guardarExtras();
+    if(BASE.some(b => b.id === t.id)){ ocultos.add(t.id); store.set("ocultos", [...ocultos]); }
     favoritos.delete(t.id); store.set("favoritos", [...favoritos]);
   }
   delete cuentas[usuario.tel]; store.set("cuentas", cuentas);
