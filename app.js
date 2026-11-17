@@ -221,9 +221,10 @@ const BASE = [
    res:[{a:"Beatriz Arango",t:"Muy amable y cuidadoso dentro de la casa.",c:5,h:"Hace 1 mes"},{a:"Juan Camilo Ortiz",t:"Quedó bien. Volvería a llamarlo.",c:4,h:"Hace 2 meses"}]},
   // Perfil real del autor del prototipo. El celular es de ejemplo: con él se puede iniciar sesión.
   {id:"wilmer", nombre:"Wilmer Agudelo", cat:"plomeria", titulo:"Plomero", rating:0, n:0, comuna:2, barrio:"La Francia", ang:20, anos:4, tel:"300 000 0038", color:"#2F5D3A", nuevo:true,
+   foto:"img/perfiles/wilmer.jpg",
    sobre:"Arreglo daños en tubería, instalo duchas, hago cualquier tipo de cambio e instalo lavaderos, sanitarios, lavamanos, etc.",
-   trabajos:["Arreglo de daños en tubería","Instalación de duchas","Instalación de lavaderos","Instalación de sanitarios y lavamanos"],
-   galeria:[],
+   trabajos:["Reparación e instalación de sanitarios","Cambio de grifos e instalación de lavamanos","Reparación de tuberías","Instalación de duchas y lavaderos"],
+   galeria:[{f:"wilmer-sifon-ducha",c:"Reparación del sifón de la ducha: se instala uno nuevo"},{f:"wilmer-cambio-tuberias",c:"Cambio de tuberías por fugas y mal estado"},{f:"wilmer-lavamanos-grifo",c:"Cambio de lavamanos y grifo"},{f:"wilmer-sanitario",c:"Instalación de sanitario"}],
    res:[]}
 ];
 
@@ -310,7 +311,7 @@ const iniciales = n => n.split(" ").filter(Boolean).slice(0,2).map(p=>p[0]).join
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 function avatarSVG(t, alto){
-  if(t.foto && /^data:image\/(jpeg|png|webp);base64,/.test(t.foto))
+  if(t.foto && (/^data:image\/(jpeg|png|webp);base64,/.test(t.foto) || /^img\/perfiles\/[\w-]+\.(jpg|png|webp)$/.test(t.foto)))
     return `<img src="${t.foto}" alt="" style="display:block;width:100%;height:100%;object-fit:cover">`;
   const c = cColor(t.cat), bg = cSuave(t.cat);
   return `<svg viewBox="0 0 200 ${alto}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display:block">
@@ -939,6 +940,10 @@ function pintarPerfil(id){
 const MAX_FOTOS = 8;
 /* Fotos de ejemplo: Wikimedia Commons. Las licencias CC BY / CC BY-SA exigen dar crédito al autor. */
 const FOTOS = {
+  "wilmer-sifon-ducha"        : {a:"Wilmer Agudelo", l:"Foto propia"},
+  "wilmer-cambio-tuberias"    : {a:"Wilmer Agudelo", l:"Foto propia"},
+  "wilmer-lavamanos-grifo"    : {a:"Wilmer Agudelo", l:"Foto propia"},
+  "wilmer-sanitario"          : {a:"Wilmer Agudelo", l:"Foto propia"},
   "arreglo-de-fuga-en-llave-de-cocina"     : {a:"Philip Bosma at Dutch Wikipedia (Original text: Philip Bosma", l:"CC BY-SA 3.0", u:"File:Keukenmengkraan.jpg"},
   "cambio-de-griferia-de-lavamanos"        : {a:"NorthernGermanUnion", l:"CC BY-SA 4.0", u:"File:Sink_missing_faucet.jpg"},
   "sanitario-instalado-en-remodelacion"    : {a:"Gaurav Dhwaj Khadka", l:"CC BY-SA 4.0", u:"File:Toilet_and_Bathroom.jpg"},
@@ -1016,7 +1021,7 @@ function figuraTrabajo(t, g, i, esMio){
   if(g.f && FOTOS[g.f]){
     const cr = FOTOS[g.f];
     img = `<img src="img/trabajos/${g.f}.jpg" alt="${esc(g.c)}" loading="lazy" width="640" height="427">`;
-    credito = `<a class="credito" href="https://commons.wikimedia.org/wiki/${encodeURI(cr.u)}" target="_blank" rel="noopener">Foto: ${esc(cr.a)} · ${esc(cr.l)}</a>`;
+    if(cr.u) credito = `<a class="credito" href="https://commons.wikimedia.org/wiki/${encodeURI(cr.u)}" target="_blank" rel="noopener">Foto: ${esc(cr.a)} · ${esc(cr.l)}</a>`;
   } else if(g.src && /^data:image\/(jpeg|png|webp);base64,/.test(g.src)){
     img = `<img src="${g.src}" alt="${esc(g.c||"Trabajo de "+t.nombre)}" loading="lazy">`;
   } else {
@@ -1034,7 +1039,9 @@ function fotosDe(t){
   t.galeria.forEach((g, i) => {
     if(typeof g !== "object") return;
     if(g.f && FOTOS[g.f]){
-      const cr = FOTOS[g.f], archivo = cr.u.replace(/^File:/, "");
+      const cr = FOTOS[g.f];
+      if(!cr.u){ lista.push({i, src: `img/trabajos/${g.f}.jpg`, c: g.c, credito: ""}); return; }   // foto propia del trabajador
+      const archivo = cr.u.replace(/^File:/, "");
       lista.push({i, src: `img/trabajos/${g.f}.jpg`, alta: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(archivo)}?width=1600`, c: g.c,
         credito: `<a href="https://commons.wikimedia.org/wiki/${encodeURI(cr.u)}" target="_blank" rel="noopener">Foto: ${esc(cr.a)} · ${esc(cr.l)}</a>`});
     } else if(g.src && /^data:image\/(jpeg|png|webp);base64,/.test(g.src)) lista.push({i, src: g.src, c: g.c || "Trabajo de " + t.nombre, credito: ""});
