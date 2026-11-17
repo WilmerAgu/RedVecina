@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -21,6 +22,7 @@
       <a href="#inicio" data-nav="inicio">Inicio</a>
       <a href="#buscar" data-nav="buscar">Trabajadores</a>
       <a href="#favoritos" data-nav="favoritos">Favoritos</a>
+      <a href="#inicio" data-nav="cuenta" id="navMiPerfil" class="solo-trabajador">Mi perfil</a>
       <a href="#nosotros" data-nav="nosotros">Nosotros</a>
     </nav>
     <div class="acciones-top">
@@ -140,9 +142,19 @@
       </div>
     </details>
     <div>
+      <form class="mi-dir" id="formDir" novalidate>
+        <label for="dirTxt">Tu dirección <span>(solo tú la ves)</span></label>
+        <div class="mi-dir-fila">
+          <input id="dirTxt" type="text" autocomplete="street-address" placeholder="Ej. Calle 107 # 51-20">
+          <button class="btn btn-primario" type="submit">Ubicar</button>
+          <button class="btn btn-borde" type="button" id="dirGps">Usar mi ubicación</button>
+          <button class="btn btn-texto" type="button" id="dirQuitar" hidden>Quitar</button>
+        </div>
+        <p class="mi-dir-msg" id="dirMsg" aria-live="polite"></p>
+      </form>
       <div class="mapa-wrap">
         <div class="mapa-nota" id="mapaNota"><strong>Trabajadores por comuna</strong><br>Mostramos el barrio y la comuna, nunca la dirección exacta.</div>
-        <svg id="mapa" viewBox="0 0 800 420" role="img" aria-label="Mapa con trabajadores cercanos"></svg>
+        <div id="mapa" class="mapa-real" role="region" aria-label="Mapa de Medellín con los trabajadores por barrio"></div>
         <div class="leyenda" id="leyenda"></div>
       </div>
       <div class="lista-res" id="listaRes"></div>
@@ -265,6 +277,15 @@
 
 <dialog id="dlgContacto"><div class="modal-cuerpo" id="dlgContactoCuerpo"></div></dialog>
 <dialog id="dlgEditar" class="dlg-ancho"><form class="modal-cuerpo" id="formEditar" novalidate></form></dialog>
+<dialog id="dlgFoto" class="dlg-foto" aria-label="Foto ampliada">
+  <div class="foto-escenario">
+    <button type="button" class="foto-cerrar" aria-label="Cerrar">×</button>
+    <button type="button" class="foto-nav ant" aria-label="Foto anterior">‹</button>
+    <img id="fotoGrande" alt="">
+    <button type="button" class="foto-nav sig" aria-label="Foto siguiente">›</button>
+  </div>
+  <div class="foto-pie"><strong id="fotoTxt"></strong><span id="fotoCredito"></span><span id="fotoCuenta"></span></div>
+</dialog>
 <dialog id="dlgCalificar"><div class="modal-cuerpo" id="dlgCalificarCuerpo"></div></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

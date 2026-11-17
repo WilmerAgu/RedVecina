@@ -1,75 +1,71 @@
 /* División político-administrativa de Medellín: 16 comunas y 5 corregimientos.
-   Barrios según el Decreto 346 de 2000 (áreas institucionales sin población residente excluidas).
-   En los corregimientos se listan centros poblados y veredas.
-   "c" es el centro aproximado [latitud, longitud]; solo se usa para ordenar por cercanía y ubicar
-   los pines del mapa. Nunca se muestra como ubicación exacta de nadie. */
+   Fuente: capa "Límite barrio vereda catastral" de la Alcaldía de Medellín (sincronizada en mayo de 2025),
+   publicada en ArcGIS Online. "barrios" son los que se pueden elegir (sin áreas institucionales ni de expansión).
+   "c" es un punto interior de la comuna y "centros" un punto interior de cada barrio o vereda [latitud, longitud].
+   Se usan para ubicar a los trabajadores en su barrio y calcular distancias aproximadas: nunca son la casa de nadie.
+   Los límites para dibujar el mapa están en geo-medellin.js, que se carga solo cuando se abre un mapa. */
 window.COMUNAS_MEDELLIN = [
-  {n:1, nombre:"Popular", c:[6.2955,-75.5470], barrios:[
-    "Santo Domingo Savio n.º 1","Santo Domingo Savio n.º 2","Popular","Granizal","Moscú n.º 2","Villa Guadalupe",
-    "San Pablo","El Compromiso","Aldea Pablo VI","La Esperanza n.º 2","La Avanzada","Carpinelo"]},
-  {n:2, nombre:"Santa Cruz", c:[6.2970,-75.5570], barrios:[
-    "La Isla","El Playón de los Comuneros","Pablo VI","La Frontera","La Francia","Andalucía","Villa del Socorro",
-    "Villa Niza","Moscú n.º 1","Santa Cruz","La Rosa"]},
-  {n:3, nombre:"Manrique", c:[6.2800,-75.5470], barrios:[
-    "La Salle","Las Granjas","Campo Valdés n.º 2","Santa Inés","El Raizal","El Pomar","Manrique Central n.º 2",
-    "Manrique Oriental","Versalles n.º 1","Versalles n.º 2","La Cruz","Oriente","María Cano - Carambolas",
-    "San José La Cima n.º 1","San José La Cima n.º 2"]},
-  {n:4, nombre:"Aranjuez", c:[6.2830,-75.5600], barrios:[
-    "Berlín","San Isidro","Palermo","Los Álamos","Moravia","Sevilla","San Pedro","Manrique Central n.º 1",
-    "Campo Valdés n.º 1","Las Esmeraldas","La Piñuela","Aranjuez","Brasilia","Miranda"]},
-  {n:5, nombre:"Castilla", c:[6.2930,-75.5740], barrios:[
-    "Castilla","Tricentenario","Héctor Abad Gómez","Toscana","Boyacá","Las Brisas","Florencia","Tejelo","Girardot",
-    "Francisco Antonio Zea","Alfonso López","Belalcázar","Caribe","El Progreso"]},
-  {n:6, nombre:"Doce de Octubre", c:[6.3040,-75.5860], barrios:[
-    "Santander","Doce de Octubre n.º 1","Doce de Octubre n.º 2","Progreso n.º 2","El Triunfo","Mirador del Doce",
-    "Picachito","Picacho","San Martín de Porres","Pedregal","La Esperanza","Kennedy"]},
-  {n:7, nombre:"Robledo", c:[6.2790,-75.5940], barrios:[
-    "Cerro El Volador","San Germán","Facultad de Minas","La Pilarica","Bosques de San Pablo","Altamira","Córdoba",
-    "López de Mesa","El Diamante","Miramar","Aures n.º 1","Aures n.º 2","Bello Horizonte","Villa Flora","Palenque",
-    "Robledo","Cucaracho","Fuente Clara","Santa Margarita","La Campiña","La Huerta","Olaya Herrera","Pajarito",
-    "Monteclaro","Nueva Villa de La Iguaná"]},
-  {n:8, nombre:"Villa Hermosa", c:[6.2550,-75.5480], barrios:[
-    "Villa Hermosa","La Mansión","San Miguel","La Ladera","Batallón Girardot","Llanaditas","Los Mangos","Enciso",
-    "Sucre","El Pinal","Trece de Noviembre","La Libertad","Villatina","San Antonio","Las Estancias","Villa Turbay",
-    "La Sierra","Villa Liliam"]},
-  {n:9, nombre:"Buenos Aires", c:[6.2370,-75.5530], barrios:[
-    "Juan Pablo II","Barrios de Jesús","Ocho de Marzo","Barrio Caicedo","Bomboná n.º 2","Los Cerros - El Vergel",
-    "Buenos Aires","Miraflores","Cataluña","La Milagrosa","Gerona","El Salvador","Loreto","Asomadera n.º 1",
-    "Asomadera n.º 2","Asomadera n.º 3","Alejandro Echavarría"]},
-  {n:10, nombre:"La Candelaria", c:[6.2500,-75.5680], barrios:[
-    "Prado","Jesús Nazareno","El Chagualo","Estación Villa","San Benito","Guayaquil","Corazón de Jesús","Calle Nueva",
-    "Perpetuo Socorro","Colón","Las Palmas","Bomboná n.º 1","Boston","Los Ángeles","Villanueva","La Candelaria","San Diego"]},
-  {n:11, nombre:"Laureles - Estadio", c:[6.2490,-75.5900], barrios:[
-    "La Castellana","Las Acacias","Laureles","Conquistadores","San Joaquín","Bolivariana","Lorena","El Velódromo",
-    "Florida Nueva","Naranjal","Suramericana","Estadio","Los Colores","Cuarta Brigada","Carlos E. Restrepo"]},
-  {n:12, nombre:"La América", c:[6.2540,-75.6050], barrios:[
-    "Ferrini","Calasanz","Los Pinos","La América","La Floresta","Santa Lucía","El Danubio","Campo Alegre",
-    "Santa Mónica","Barrio Cristóbal","Simón Bolívar","Santa Teresita","Calasanz Parte Alta"]},
-  {n:13, nombre:"San Javier", c:[6.2580,-75.6170], barrios:[
-    "El Pesebre","Blanquizal","Santa Rosa de Lima","Los Alcázares","Metropolitano","La Pradera","Juan XXIII - La Quiebra",
-    "Antonio Nariño","San Javier n.º 1","San Javier n.º 2","Veinte de Julio","El Salado","Nuevos Conquistadores",
-    "Las Independencias","El Corazón","Belencito","Betania","La Divisa","Eduardo Santos","El Socorro"]},
-  {n:14, nombre:"El Poblado", c:[6.2060,-75.5680], barrios:[
-    "Barrio Colombia","Villa Carlota","Castropol","Lalinde","Las Lomas n.º 1","Las Lomas n.º 2","Altos del Poblado",
-    "El Tesoro","Los Naranjos","Los Balsos n.º 1","Los Balsos n.º 2","San Lucas","El Diamante n.º 2","El Castillo",
-    "Alejandría","La Florida","El Poblado","Manila","Astorga","Patio Bonito","La Aguacatala","Santa María de Los Ángeles"]},
-  {n:15, nombre:"Guayabal", c:[6.2130,-75.5860], barrios:[
-    "Tenche","Trinidad","Santa Fe","Campo Amor","Cristo Rey","Guayabal","La Colina"]},
-  {n:16, nombre:"Belén", c:[6.2290,-75.6010], barrios:[
-    "Fátima","Rosales","Belén","Granada","San Bernardo","Las Playas","Diego Echavarría","La Mota","La Hondonada",
-    "El Rincón","Loma de los Bernal","La Gloria","Altavista","La Palma","Los Alpes","Las Violetas","Las Mercedes",
-    "Nueva Villa del Aburrá","Miravalle","El Nogal - Los Almendros","Cerro Nutibara"]},
-  {n:50, nombre:"San Sebastián de Palmitas", corto:"Palmitas", corregimiento:true, c:[6.3400,-75.6900], barrios:[
-    "Palmitas Central","La Urquitá","La Sucia","La Aldea","La Suiza","Potrera - Miserenga","La Volcana - Guayabal","La Frisola"]},
-  {n:60, nombre:"San Cristóbal", corto:"San Cristóbal", corregimiento:true, c:[6.2800,-75.6370], barrios:[
-    "San Cristóbal","El Llano","La Loma","La Palma","Pajarito","Pedregal Alto","San José de la Montaña","Naranjal",
-    "El Yolombo","La Ilusión","Las Playas","El Uvito","El Carmelo","La Cuchilla","El Picacho","Travesías","Boquerón","El Patio"]},
-  {n:70, nombre:"Altavista", corto:"Altavista", corregimiento:true, c:[6.2220,-75.6300], barrios:[
-    "Altavista","Aguas Frías","Buga - Patio Bonito","San José de Manzanillo","San Pablo","El Corazón - El Morro",
-    "El Jardín","La Esperanza","Patio Bolas"]},
-  {n:80, nombre:"San Antonio de Prado", corto:"San Antonio", corregimiento:true, c:[6.1830,-75.6560], barrios:[
-    "San Antonio de Prado","La Florida","Potrerito","El Astillero","El Salado","La Verde","Montañita","Yarumalito"]},
-  {n:90, nombre:"Santa Elena", corto:"Santa Elena", corregimiento:true, c:[6.2100,-75.5000], barrios:[
-    "Santa Elena","Barro Blanco","Mazo","Piedras Blancas - Matasano","Media Luna","El Plan","Las Palmas",
-    "Piedra Gorda","El Placer","El Cerro","El Llano"]}
+  {n:1, nombre:"Popular", c:[6.29348,-75.54418],
+   barrios:["Aldea Pablo VI","Carpinelo","El Compromiso","Granizal","La Avanzada","La Esperanza n.º 2","Moscú n.º 2","Popular","San Pablo","Santo Domingo Savio n.º 1","Santo Domingo Savio n.º 2","Villa Guadalupe"],
+   centros:{"Aldea Pablo VI":[6.28783,-75.54169],"La Esperanza n.º 2":[6.29121,-75.5417],"Carpinelo":[6.28873,-75.53862],"Granizal":[6.29254,-75.54634],"Popular":[6.30031,-75.54685],"Santo Domingo Savio n.º 1":[6.29697,-75.54392],"Moscú n.º 2":[6.29008,-75.54965],"Santo Domingo Savio n.º 2":[6.29931,-75.53978],"La Avanzada":[6.29454,-75.53834],"San Pablo":[6.28765,-75.54593],"El Compromiso":[6.28787,-75.54328],"Villa Guadalupe":[6.28721,-75.5514]}},
+  {n:2, nombre:"Santa Cruz", c:[6.29838,-75.55462],
+   barrios:["Andalucía","La Francia","La Frontera","La Isla","La Rosa","Moscú n.º 1","Pablo VI","Playón de Los Comuneros","Santa Cruz","Villa del Socorro","Villa Niza"],
+   centros:{"Villa del Socorro":[6.29479,-75.55278],"Villa Niza":[6.29607,-75.55784],"Playón de Los Comuneros":[6.30681,-75.55273],"La Frontera":[6.30518,-75.55495],"Moscú n.º 1":[6.29164,-75.55416],"Andalucía":[6.29828,-75.55487],"La Isla":[6.30319,-75.54947],"La Francia":[6.30059,-75.55344],"Pablo VI":[6.30343,-75.55347],"Santa Cruz":[6.2931,-75.55933],"La Rosa":[6.29054,-75.55894]}},
+  {n:3, nombre:"Manrique", c:[6.27328,-75.54548],
+   barrios:["Campo Valdés n.º 2","El Pomar","El Raizal","La Cruz","La Salle","Las Granjas","Manrique Central n.º 2","Manrique Oriental","María Cano Carambolas","Oriente","San José la Cima n.º 1","San José la Cima n.º 2","Santa Inés","Versalles n.º 1","Versalles n.º 2"],
+   centros:{"María Cano Carambolas":[6.28219,-75.53957],"El Raizal":[6.26933,-75.54545],"Campo Valdés n.º 2":[6.27295,-75.55201],"Oriente":[6.27538,-75.54068],"Manrique Central n.º 2":[6.26473,-75.55359],"Manrique Oriental":[6.2643,-75.54928],"Santa Inés":[6.27287,-75.5478],"La Salle":[6.28371,-75.54802],"Las Granjas":[6.27891,-75.54821],"Versalles n.º 2":[6.26477,-75.54028],"San José la Cima n.º 2":[6.27821,-75.54324],"San José la Cima n.º 1":[6.28315,-75.54216],"El Pomar":[6.26816,-75.55206],"Versalles n.º 1":[6.26468,-75.54393],"La Cruz":[6.27048,-75.53868]}},
+  {n:4, nombre:"Aranjuez", c:[6.27615,-75.56153],
+   barrios:["Aranjuez","Berlín","Bermejal-Los Álamos","Brasilia","Campo Valdés n.º 1","La Piñuela","Las Esmeraldas","Manrique Central n.º 1","Miranda","Moravia","Palermo","San Isidro","San Pedro","Sevilla"],
+   centros:{"Las Esmeraldas":[6.27896,-75.55464],"La Piñuela":[6.28144,-75.5559],"Miranda":[6.27511,-75.56268],"Manrique Central n.º 1":[6.26597,-75.55713],"Parque Norte":[6.27225,-75.56799],"Moravia":[6.2787,-75.56675],"San Pedro":[6.26694,-75.56068],"Sevilla":[6.26648,-75.56469],"Berlín":[6.28579,-75.55544],"Palermo":[6.28727,-75.56416],"Bermejal-Los Álamos":[6.28084,-75.56467],"Universidad de Antioquia":[6.26745,-75.56925],"Jardín Botánico":[6.2705,-75.56358],"Campo Valdés n.º 1":[6.2734,-75.55597],"Brasilia":[6.27418,-75.55952],"Aranjuez":[6.28066,-75.56073],"San Isidro":[6.28681,-75.56056]}},
+  {n:5, nombre:"Castilla", c:[6.29222,-75.56869],
+   barrios:["Alfonso López","Belalcázar","Boyacá","Caribe","Castilla","El Progreso","Florencia","Francisco Antonio Zea","Girardot","Héctor Abad Gómez","Las Brisas","Tejelo","Toscana","Tricentenario"],
+   centros:{"Belalcázar":[6.29587,-75.56438],"Girardot":[6.29758,-75.56902],"Terminal de Transporte":[6.27773,-75.57102],"Oleoducto":[6.28445,-75.56907],"Caribe":[6.27,-75.57343],"Toscana":[6.30759,-75.55861],"Castilla":[6.29091,-75.57207],"Tricentenario":[6.29136,-75.56637],"Francisco Antonio Zea":[6.28595,-75.57351],"El Progreso":[6.27433,-75.57675],"Alfonso López":[6.2844,-75.57592],"Cementerio Universal":[6.2788,-75.57375],"Las Brisas":[6.30856,-75.56187],"Florencia":[6.31029,-75.56702],"Plaza de Ferias":[6.29986,-75.56242],"Boyacá":[6.3043,-75.56489],"Tejelo":[6.30578,-75.56874],"Héctor Abad Gómez":[6.30026,-75.55927]}},
+  {n:6, nombre:"Doce de Octubre", c:[6.29903,-75.57931],
+   barrios:["Doce de Octubre n.º 1","Doce de Octubre n.º 2","El Progreso n.º 2","El Triunfo","Kennedy","La Esperanza","Mirador del Doce","Pedregal","Picachito","Picacho","San Martín de Porres","Santander"],
+   centros:{"El Progreso n.º 2":[6.30679,-75.58314],"Mirador del Doce":[6.3033,-75.58319],"Picachito":[6.3002,-75.58527],"Santander":[6.30706,-75.57466],"San Martín de Porres":[6.29456,-75.5804],"Kennedy":[6.28878,-75.58243],"Pedregal":[6.30088,-75.57326],"Doce de Octubre n.º 2":[6.30055,-75.57913],"La Esperanza":[6.2928,-75.57674],"Picacho":[6.29559,-75.58472],"El Triunfo":[6.30776,-75.58515],"Doce de Octubre n.º 1":[6.30698,-75.5792]}},
+  {n:7, nombre:"Robledo", c:[6.27749,-75.59256],
+   barrios:["Altamira","Aures n.º 1","Aures n.º 2","Bello Horizonte","Bosques de San Pablo","Cerro El Volador","Córdoba","Cucaracho","El Diamante","Fuente Clara","La Pilarica","López de Mesa","Monteclaro","Nueva Villa de la Iguaná","Olaya Herrera","Pajarito","Palenque","Robledo","San Germán","Santa Margarita","Villa Flora"],
+   centros:{"Nueva Villa de la Iguaná":[6.26232,-75.58429],"Villa Flora":[6.27963,-75.59084],"Monteclaro":[6.28784,-75.59999],"Cerro El Volador":[6.26734,-75.58178],"Cucaracho":[6.28103,-75.60249],"Bosques de San Pablo":[6.27732,-75.58278],"San Germán":[6.26931,-75.58942],"Aures n.º 1":[6.28679,-75.59381],"López de Mesa":[6.28359,-75.58115],"Santa Margarita":[6.27586,-75.61541],"Universidad Nacional":[6.26253,-75.57621],"Palenque":[6.27925,-75.59475],"Facultad Veterinaria y Zootecnia U.de.A.":[6.27199,-75.58783],"El Diamante":[6.28538,-75.58685],"Aures n.º 2":[6.29207,-75.59111],"Bello Horizonte":[6.2826,-75.58947],"Robledo":[6.27582,-75.59801],"Facultad de Minas U. Nacional":[6.27447,-75.58945],"La Pilarica":[6.27634,-75.58557],"Olaya Herrera":[6.27309,-75.61378],"Pajarito":[6.28365,-75.6059],"Fuente Clara":[6.27768,-75.60556],"Córdoba":[6.2806,-75.57651],"Altamira":[6.27986,-75.58137]}},
+  {n:8, nombre:"Villa Hermosa", c:[6.2473,-75.54442],
+   barrios:["Batallón Girardot","El Pinal","Enciso","La Ladera","La Libertad","La Mansión","La Sierra","Las Estancias","Llanaditas","Los Mangos","San Antonio","San Miguel","Sucre","Trece de Noviembre","Villa Hermosa","Villa Liliam","Villa Turbay","Villatina"],
+   centros:{"Llanaditas":[6.25299,-75.53994],"Villa Hermosa":[6.25771,-75.54987],"Batallón Girardot":[6.26077,-75.54838],"Trece de Noviembre":[6.24726,-75.54104],"San Miguel":[6.25517,-75.55596],"La Mansión":[6.25949,-75.5556],"Las Estancias":[6.23276,-75.53325],"Sucre":[6.24525,-75.55153],"La Ladera":[6.25431,-75.54756],"La Libertad":[6.24101,-75.54243],"El Pinal":[6.24435,-75.54545],"Los Mangos":[6.25063,-75.54474],"Villa Liliam":[6.23579,-75.5329],"Enciso":[6.24903,-75.55065],"San Antonio":[6.2384,-75.53644],"La Sierra":[6.23379,-75.52782],"Villa Turbay":[6.2374,-75.52992],"Villatina":[6.23689,-75.5397]}},
+  {n:9, nombre:"Buenos Aires", c:[6.23151,-75.55285],
+   barrios:["Alejandro Echavarría","Asomadera n.º 1","Asomadera n.º 2","Asomadera n.º 3","Barrio Caicedo","Barrio de Jesús","Bomboná n.º 2","Buenos Aires","Cataluña","El Salvador","Gerona","Juan Pablo II","La Milagrosa","Loreto","Los Cerros El Vergel","Miraflores","Ocho de Marzo"],
+   centros:{"Asomadera n.º 1":[6.22899,-75.56321],"Asomadera n.º 2":[6.21962,-75.56233],"Los Cerros El Vergel":[6.23377,-75.54421],"Miraflores":[6.23707,-75.54999],"Gerona":[6.23834,-75.55883],"Alejandro Echavarría":[6.23788,-75.54563],"Juan Pablo II":[6.22958,-75.52946],"El Salvador":[6.23702,-75.56192],"Asomadera n.º 3":[6.21931,-75.5589],"Ocho de Marzo":[6.2282,-75.52977],"Cataluña":[6.23148,-75.55159],"La Milagrosa":[6.23555,-75.55476],"Bomboná n.º 2":[6.22883,-75.5451],"Barrio de Jesús":[6.22986,-75.53674],"Loreto":[6.23096,-75.5576],"Buenos Aires":[6.24065,-75.55597],"Barrio Caicedo":[6.2429,-75.55423]}},
+  {n:10, nombre:"La Candelaria", c:[6.24765,-75.56806],
+   barrios:["Barrio Colón","Bomboná n.º 1","Boston","Calle Nueva","Corazón de Jesús","El Chagualo","Estación Villa","Guayaquil","Jesús Nazareno","La Candelaria","Las Palmas","Los Ángeles","Perpetuo Socorro","Prado","San Benito","San Diego","Villa Nueva"],
+   centros:{"Corazón de Jesús":[6.24999,-75.57712],"Guayaquil":[6.24761,-75.57245],"Perpetuo Socorro":[6.23432,-75.5731],"San Diego":[6.2333,-75.56735],"Las Palmas":[6.24077,-75.5658],"San Benito":[6.25436,-75.57323],"Los Ángeles":[6.25251,-75.55821],"La Candelaria":[6.2495,-75.56651],"El Chagualo":[6.26155,-75.57096],"Estación Villa":[6.25568,-75.56912],"Jesús Nazareno":[6.25992,-75.56741],"Bomboná n.º 1":[6.24369,-75.56205],"Villa Nueva":[6.25354,-75.56369],"Calle Nueva":[6.2413,-75.57285],"Prado":[6.25975,-75.56164],"Hospital San Vicente de Paúl":[6.26289,-75.56516],"La Alpujarra":[6.2439,-75.57725],"Boston":[6.24772,-75.55875],"Centro Administrativo":[6.24413,-75.5737],"Barrio Colón":[6.24262,-75.5687]}},
+  {n:11, nombre:"Laureles - Estadio", c:[6.25059,-75.59126],
+   barrios:["Bolivariana","Carlos E. Restrepo","Cuarta Brigada","El Estadio","El Velódromo","Florida Nueva","La Castellana","Las Acacias","Laureles","Lorena","Los Colores","Los Conquistadores","Naranjal","San Joaquín","Suramericana"],
+   centros:{"Lorena":[6.24816,-75.59853],"Naranjal":[6.25079,-75.58409],"El Estadio":[6.26009,-75.59421],"El Velódromo":[6.25426,-75.59555],"U.D. Atanasio Girardot":[6.25654,-75.59031],"San Joaquín":[6.24637,-75.58558],"Suramericana":[6.25468,-75.58293],"Florida Nueva":[6.25139,-75.59092],"Los Colores":[6.26615,-75.59258],"Universidad Pontificia Bolivariana":[6.24226,-75.58947],"Las Acacias":[6.24122,-75.60091],"Carlos E. Restrepo":[6.25788,-75.58019],"Bolivariana":[6.24638,-75.59067],"Los Conquistadores":[6.24249,-75.58264],"Cuarta Brigada":[6.26179,-75.589],"Laureles":[6.24325,-75.59555],"La Castellana":[6.24049,-75.60724]}},
+  {n:12, nombre:"La América", c:[6.25453,-75.60563],
+   barrios:["Barrio Cristóbal","Calasanz","Calasanz Parte Alta","Campo Alegre","El Danubio","Ferrini","La América","La Floresta","Los Pinos","Santa Lucía","Santa Mónica","Santa Teresita","Simón Bolívar"],
+   centros:{"Ferrini":[6.26908,-75.59699],"La Floresta":[6.2563,-75.60137],"Santa Teresita":[6.24327,-75.61225],"Campo Alegre":[6.25371,-75.61191],"Santa Lucía":[6.2577,-75.60718],"Simón Bolívar":[6.24621,-75.60549],"Los Pinos":[6.25215,-75.59887],"La América":[6.25165,-75.60452],"Barrio Cristóbal":[6.24805,-75.60939],"Calasanz":[6.26262,-75.59863],"El Danubio":[6.25279,-75.60853],"Santa Mónica":[6.24807,-75.61331],"Calasanz Parte Alta":[6.2666,-75.60208]}},
+  {n:13, nombre:"San Javier", c:[6.25544,-75.61868],
+   barrios:["Antonio Nariño","Belencito","Betania","Blanquizal","Eduardo Santos","El Corazón","El Pesebre","El Salado","El Socorro","Juan XXIII La Quiebra","La Pradera","Las Independencias","Los Alcázares","Metropolitano","Nuevos Conquistadores","San Javier n.º 1","San Javier n.º 2","Santa Rosa de Lima","Veinte de Julio"],
+   centros:{"El Pesebre":[6.27261,-75.59977],"Betania":[6.24322,-75.61975],"San Javier n.º 1":[6.25581,-75.61733],"Eduardo Santos":[6.25951,-75.62889],"El Socorro":[6.26096,-75.61806],"San Javier n.º 2":[6.25808,-75.61429],"Los Alcázares":[6.26079,-75.60456],"Metropolitano":[6.26368,-75.60889],"El Salado":[6.25487,-75.62714],"Santa Rosa de Lima":[6.26525,-75.60624],"Nuevos Conquistadores":[6.25048,-75.62803],"El Corazón":[6.24712,-75.6272],"Blanquizal":[6.27433,-75.60492],"Juan XXIII La Quiebra":[6.26665,-75.6138],"Belencito":[6.24833,-75.61748],"Veinte de Julio":[6.25224,-75.62096],"La Pradera":[6.26087,-75.61101],"Las Independencias":[6.24918,-75.62362],"Antonio Nariño":[6.25896,-75.62194]}},
+  {n:14, nombre:"El Poblado", c:[6.20101,-75.56634],
+   barrios:["Alejandría","Altos del Poblado","Astorga","Barrio Colombia","Castropol","El Castillo","El Diamante n.º 2","El Poblado","El Tesoro","La Aguacatala","La Florida","Lalinde","Las Lomas n.º 1","Las Lomas n.º 2","Los Balsos n.º 1","Los Balsos n.º 2","Los Naranjos","Manila","Patio Bonito","San Lucas","Santa María de los Ángeles","Villa Carlota"],
+   centros:{"Los Balsos n.º 1":[6.18857,-75.56072],"Las Lomas n.º 1":[6.21107,-75.56207],"Altos del Poblado":[6.21177,-75.55208],"El Castillo":[6.19044,-75.57233],"Los Naranjos":[6.19616,-75.55913],"Manila":[6.21336,-75.57338],"Los Balsos n.º 2":[6.19555,-75.5704],"Astorga":[6.20993,-75.57343],"La Aguacatala":[6.19875,-75.57743],"Lalinde":[6.21291,-75.56694],"Barrio Colombia":[6.22732,-75.57274],"Alejandría":[6.1998,-75.56885],"La Florida":[6.20469,-75.56588],"El Poblado":[6.20925,-75.56778],"Villa Carlota":[6.21993,-75.57353],"Santa María de los Ángeles":[6.19037,-75.57981],"Las Lomas n.º 2":[6.21079,-75.55731],"San Lucas":[6.18133,-75.56432],"El Diamante n.º 2":[6.18368,-75.57382],"El Tesoro":[6.20293,-75.55595],"Patio Bonito":[6.20649,-75.57556],"Castropol":[6.21939,-75.56732]}},
+  {n:15, nombre:"Guayabal", c:[6.2133,-75.58649],
+   barrios:["Campo Amor","Cristo Rey","Guayabal","La Colina","Santa Fé","Tenche","Trinidad"],
+   centros:{"Cristo Rey":[6.2062,-75.58476],"Campo Amor":[6.21289,-75.5826],"Guayabal":[6.19904,-75.58547],"Santa Fé":[6.22243,-75.58116],"Tenche":[6.23129,-75.58037],"Trinidad":[6.22764,-75.5833],"La Colina":[6.19997,-75.59305],"El Rodeo":[6.20588,-75.59407],"Parque Juan Pablo II":[6.21929,-75.58995]}},
+  {n:16, nombre:"Belén", c:[6.22558,-75.59917],
+   barrios:["Altavista","Belén","Cerro Nutibara","Diego Echavarría","El Nogal-Los Almendros","El Rincón","Fátima","Granada","La Gloria","La Hondonada","La Mota","La Palma","Las Mercedes","Las Playas","Las Violetas","Loma de los Bernal","Los Alpes","Miravalle","Nueva Villa de Aburrá","Rosales","San Bernardo"],
+   centros:{"Rosales":[6.23535,-75.59083],"El Nogal-Los Almendros":[6.23737,-75.59671],"Los Alpes":[6.23051,-75.60779],"Las Mercedes":[6.23585,-75.60964],"El Rincón":[6.21049,-75.60304],"Diego Echavarría":[6.21571,-75.59553],"La Hondonada":[6.20342,-75.603],"Granada":[6.23018,-75.59332],"Miravalle":[6.23561,-75.60025],"Cerro Nutibara":[6.23597,-75.57935],"Las Playas":[6.22062,-75.59553],"Loma de los Bernal":[6.21852,-75.6033],"Fátima":[6.23555,-75.58506],"Las Violetas":[6.23288,-75.61405],"La Mota":[6.21132,-75.5987],"Belén":[6.23259,-75.59926],"La Palma":[6.22905,-75.60239],"Nueva Villa de Aburrá":[6.23573,-75.60394],"San Bernardo":[6.22614,-75.59561],"La Gloria":[6.22318,-75.60326],"Altavista":[6.22388,-75.60884]}},
+  {n:50, nombre:"San Sebastián de Palmitas", corto:"Palmitas", corregimiento:true, c:[6.32776,-75.68933],
+   barrios:["La Aldea","La Frisola","La Suiza","La Urquitá","Palmitas Sector Central","Potrera Miserenga","Suburbano La Aldea","Suburbano Palmitas","Suburbano Potrera Miserenga","Suburbano Urquitá","Volcana Guayabal"],
+   centros:{"Suburbano Potrera Miserenga":[6.35083,-75.69899],"La Suiza":[6.29285,-75.70204],"Potrera Miserenga":[6.35788,-75.68083],"Volcana Guayabal":[6.33326,-75.67422],"Suburbano Palmitas":[6.34384,-75.69001],"La Urquitá":[6.36692,-75.68957],"La Aldea":[6.34666,-75.70702],"Suburbano Urquitá":[6.36845,-75.70203],"Suburbano La Aldea":[6.3417,-75.70233],"Palmitas Sector Central":[6.34791,-75.67547],"La Frisola":[6.31299,-75.6908]}},
+  {n:60, nombre:"San Cristóbal", corto:"San Cristóbal", corregimiento:true, c:[6.2905,-75.64008],
+   barrios:["Boquerón","Cabecera Urbana San Cristóbal","El Carmelo","El Llano","El Picacho","El Uvito","La Cuchilla","La Loma","La Loma Oriental","La Palma-El Patio","Las Playas","Naranjal","Pajarito","Pedregal Alto","Pedregal Bajo","San José de la Montaña","Suburbano El Llano","Suburbano La Cuchilla","Suburbano La Loma","Suburbano La Palma-El Patio","Suburbano Pedregal Alto","Suburbano Travesías","Travesías","Yolombo"],
+   centros:{"La Cuchilla":[6.296,-75.65688],"La Loma Oriental":[6.26825,-75.62058],"Suburbano La Palma-El Patio":[6.27805,-75.64893],"Area de Expansion Altos de Calasanz":[6.26978,-75.6082],"San José de la Montaña":[6.30853,-75.63635],"Travesías":[6.30051,-75.64371],"Área de Expansión Pajarito":[6.28441,-75.61329],"La Palma-El Patio":[6.27746,-75.66745],"Cabecera Urbana San Cristóbal":[6.27795,-75.63142],"Suburbano Pedregal Alto":[6.2864,-75.63049],"Las Playas":[6.28985,-75.66281],"Pedregal Bajo":[6.28071,-75.6275],"Suburbano La Loma":[6.26938,-75.62984],"Suburbano Travesías":[6.28776,-75.64363],"Suburbano La Cuchilla":[6.29108,-75.65227],"El Uvito":[6.29911,-75.66557],"Suburbano El Llano":[6.29626,-75.64828],"El Llano":[6.30204,-75.64799],"Pajarito":[6.29334,-75.61002],"Pedregal Alto":[6.28861,-75.62798],"La Loma":[6.26322,-75.64981],"Naranjal":[6.30435,-75.6624],"Boquerón":[6.31651,-75.65602],"El Picacho":[6.29925,-75.5941],"El Carmelo":[6.30626,-75.60243],"Yolombo":[6.30313,-75.61562]}},
+  {n:70, nombre:"Altavista", corto:"Altavista", corregimiento:true, c:[6.22695,-75.63476],
+   barrios:["Aguas Frías","Altavista Sector Central","Buga Patio Bonito","El Corazón El Morro","La Esperanza","San José del Manzanillo","San Pablo","Suburbano Aguas Frías","Suburbano Altavista"],
+   centros:{"La Esperanza":[6.22171,-75.62393],"Suburbano Aguas Frías":[6.23452,-75.6378],"Area De Expansion Belén Rincon":[6.21464,-75.60726],"San Pablo":[6.23363,-75.63214],"San José del Manzanillo":[6.2057,-75.61385],"Altavista Sector Central":[6.21371,-75.62838],"Area De Expansion Altavista":[6.22068,-75.61481],"El Corazón El Morro":[6.24812,-75.63341],"Buga Patio Bonito":[6.22043,-75.63479],"Suburbano Altavista":[6.22402,-75.62843],"Area De Expansion El Noral":[6.23772,-75.61651],"Aguas Frías":[6.2406,-75.64368]}},
+  {n:80, nombre:"San Antonio de Prado", corto:"San Antonio", corregimiento:true, c:[6.21613,-75.67344],
+   barrios:["Cabecera San Antonio de Prado","El Astillero","El Salado","El Vergel","La Florida","La Oculta","La Verde","Potrerito","Suburbano Potrerito","Yarumalito"],
+   centros:{"La Florida":[6.17259,-75.6706],"El Salado":[6.20806,-75.66781],"Área de Expansión San Antonio de Prado":[6.17732,-75.65511],"Potrerito":[6.18507,-75.67198],"La Verde":[6.19618,-75.64293],"El Vergel":[6.16974,-75.65286],"El Astillero":[6.24743,-75.67804],"Yarumalito":[6.2283,-75.69321],"La Oculta":[6.19464,-75.67266],"Suburbano Potrerito":[6.18257,-75.6685],"Cabecera San Antonio de Prado":[6.1804,-75.6474]}},
+  {n:90, nombre:"Santa Elena", corto:"Santa Elena", corregimiento:true, c:[6.23495,-75.51679],
+   barrios:["Barro Blanco","El Cerro","El Llano SE","El Placer","El Plan","Las Palmas","Media Luna","Piedra Gorda","Piedras Blancas","Piedras Blancas Represa","Santa Elena Sector Central","Suburbano Barro Blanco","Suburbano Chacaltaya","Suburbano El Cerro","Suburbano El Llano","Suburbano El Placer","Suburbano El Plan","Suburbano el Tesoro","Suburbano Matasano 1","Suburbano Matasano 2","Suburbano Matasano 3","Suburbano Mirador del Poblado","Suburbano Piedra Gorda","Suburbano Santa Elena Central"],
+   centros:{"Piedras Blancas":[6.26218,-75.52951],"El Plan":[6.19797,-75.5173],"Suburbano Matasano 3":[6.27335,-75.513],"Suburbano Chacaltaya":[6.18018,-75.54113],"Piedra Gorda":[6.23967,-75.49541],"Suburbano Matasano 1":[6.27771,-75.50278],"Suburbano Mirador del Poblado":[6.22085,-75.5514],"Suburbano Matasano 2":[6.2789,-75.5124],"Suburbano El Plan":[6.2037,-75.52122],"Santa Elena Sector Central":[6.21103,-75.49968],"Las Palmas":[6.19626,-75.54088],"Barro Blanco":[6.24692,-75.48471],"Media Luna":[6.22677,-75.51799],"El Cerro":[6.19863,-75.49137],"Suburbano Barro Blanco":[6.238,-75.47513],"El Placer":[6.22678,-75.50098],"Suburbano El Placer":[6.22797,-75.49552],"Suburbano El Cerro":[6.20115,-75.49272],"Suburbano el Tesoro":[6.18002,-75.55502],"El Llano SE":[6.19511,-75.50236],"Suburbano El Llano":[6.20153,-75.50279],"Suburbano Santa Elena Central":[6.21072,-75.50107],"Suburbano Piedra Gorda":[6.23864,-75.49783],"Piedras Blancas Represa":[6.27373,-75.50877]}}
 ];
