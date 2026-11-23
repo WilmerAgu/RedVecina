@@ -34,7 +34,7 @@ const cSuave = k => `var(--cat-${catK(k)}-suave)`;
 
 /* ---------- Datos de ejemplo ---------- */
 const BASE = [
-  {id:"carlos", nombre:"Carlos Rodríguez", cat:"plomeria", titulo:"Plomero", rating:4.9, n:28, comuna:3, barrio:"Manrique Oriental", ang:-30, anos:5, tel:"300 000 0001", color:"#2F5D3A",
+  {id:"carlos", nombre:"Carlos Rodríguez", cat:"plomeria", titulo:"Plomero", rating:4.9, n:28, comuna:3, barrio:"Manrique Oriental", ang:-30, anos:5, tel:"300 000 0001", color:"#2F5D3A", foto:"img/perfiles/1h.jpeg",
    sobre:"Soy Carlos, plomero con 5 años de experiencia en reparación de tuberías, grifos, fugas y sanitarios. Trabajo con responsabilidad y puntualidad.",
    trabajos:["Reparación de tuberías","Instalación de grifos","Arreglo de fugas","Mantenimiento de sanitarios"],
    galeria:[{f:"arreglo-de-fuga-en-llave-de-cocina",c:"Arreglo de fuga en llave de cocina"},{f:"cambio-de-griferia-de-lavamanos",c:"Cambio de grifería de lavamanos"}],
@@ -44,7 +44,7 @@ const BASE = [
    trabajos:["Organización de tableros","Cambio de tomas e interruptores","Instalación de lámparas","Revisión de cortos"],
    galeria:[{f:"tablero-de-breakers-organizado",c:"Tablero de breakers organizado"},{f:"iluminacion-de-sala-instalada",c:"Iluminación de sala instalada"}],
    res:[{a:"Paula Restrepo",t:"Dejó el tablero organizado y explicó todo.",c:5,h:"Hace 2 semanas"},{a:"Jorge Mesa",t:"Llegó rápido un domingo, buen precio.",c:4,h:"Hace 2 meses"}]},
-  {id:"maria", nombre:"María Fernanda López", cat:"electrodomesticos", titulo:"Técnica en electrodomésticos", rating:5.0, n:14, comuna:10, barrio:"Boston", ang:150, anos:6, tel:"300 000 0003", color:"#8E5A3E",
+  {id:"maria", nombre:"María Fernanda López", cat:"electrodomesticos", titulo:"Técnica en electrodomésticos", rating:5.0, n:14, comuna:10, barrio:"Boston", ang:150, anos:6, tel:"300 000 0003", color:"#8E5A3E", foto:"img/perfiles/2m.jpeg",
    sobre:"Reparo neveras, lavadoras y estufas. Diagnóstico honesto: si no vale la pena arreglarlo, te lo digo.",
    trabajos:["Reparación de neveras","Mantenimiento de lavadoras","Revisión de estufas"],
    galeria:[{f:"compresor-de-nevera-cambiado",c:"Compresor de nevera cambiado"},{f:"quemadores-de-estufa-revisados",c:"Quemadores de estufa revisados"}],
@@ -59,7 +59,7 @@ const BASE = [
    trabajos:["Cambio de tubería galvanizada","Reparación de fugas","Instalación de tanques"],
    galeria:[{f:"tanques-de-agua-en-terraza",c:"Tanques de agua en terraza"},{f:"lavaplatos-y-calentador-instalados",c:"Lavaplatos y calentador instalados"}],
    res:[{a:"Hernán Vélez",t:"Sabe mucho, aunque se demoró un poco en llegar.",c:4,h:"Hace 2 meses"}]},
-  {id:"diana", nombre:"Diana Ospina", cat:"electricidad", titulo:"Electricista", rating:4.9, n:22, comuna:11, barrio:"Laureles", ang:-110, anos:7, tel:"300 000 0006", color:"#7A3E6E",
+  {id:"diana", nombre:"Diana Ospina", cat:"electricidad", titulo:"Electricista", rating:4.9, n:22, comuna:11, barrio:"Laureles", ang:-110, anos:7, tel:"300 000 0006", color:"#7A3E6E", foto:"img/perfiles/4m.jpeg",
    sobre:"Instalaciones eléctricas seguras para casas y locales. Trabajo con materiales certificados.",
    trabajos:["Cableado de casas","Instalación de duchas eléctricas","Iluminación de locales"],
    galeria:[{f:"regatas-para-cableado-nuevo",c:"Regatas para cableado nuevo"},{f:"aplique-de-pared-instalado",c:"Aplique de pared instalado"}],
@@ -69,7 +69,7 @@ const BASE = [
    trabajos:["Ajuste de puertas","Reparación de closets","Pintura de interiores"],
    galeria:[{f:"puerta-de-madera-restaurada",c:"Puerta de madera restaurada"},{f:"preparacion-de-pintura",c:"Preparación de pintura"}],
    res:[{a:"Andrea Lopera",t:"Dejó la puerta como nueva.",c:5,h:"Hace 1 mes"}]},
-  {id:"natalia", nombre:"Natalia Ríos", cat:"electrodomesticos", titulo:"Técnica en electrodomésticos", rating:4.7, n:12, comuna:13, barrio:"San Javier n.º 1", ang:310, anos:4, tel:"300 000 0008", color:"#3E8E7A",
+  {id:"natalia", nombre:"Natalia Ríos", cat:"electrodomesticos", titulo:"Técnica en electrodomésticos", rating:4.7, n:12, comuna:13, barrio:"San Javier n.º 1", ang:310, anos:4, tel:"300 000 0008", color:"#3E8E7A", foto:"img/perfiles/3m.jpeg",
    sobre:"Reparación de licuadoras, hornos microondas y televisores.",
    trabajos:["Reparación de microondas","Arreglo de televisores","Mantenimiento de licuadoras"],
    galeria:[{f:"microondas-reparado",c:"Microondas reparado"},{f:"horno-tostador-reparado",c:"Horno tostador reparado"}],
@@ -94,7 +94,7 @@ const BASE = [
    trabajos:["Instalación de tomas e interruptores","Organización de tableros","Instalación de lámparas"],
    galeria:[{f:"tablero-con-cableado-ordenado",c:"Tablero con cableado ordenado"},{f:"toma-con-interruptor",c:"Toma con interruptor"}],
    res:[{a:"Sergio Alzate",t:"Resolvió en una sola visita. Excelente.",c:5,h:"Hace 1 mes"},{a:"Luz Dary Gómez",t:"Muy amable y cuidadoso dentro de la casa.",c:5,h:"Hace 2 meses"}]},
-  {id:"gloria", nombre:"Gloria Restrepo", cat:"electrodomesticos", titulo:"Técnica en electrodomésticos", rating:4.8, n:10, comuna:4, barrio:"Palermo", ang:268, anos:8, tel:"300 000 0013", color:"#5B5B8E",
+  {id:"gloria", nombre:"Gloria Restrepo", cat:"electrodomesticos", titulo:"Técnica en electrodomésticos", rating:4.8, n:10, comuna:4, barrio:"Palermo", ang:268, anos:8, tel:"300 000 0013", color:"#5B5B8E", foto:"img/perfiles/6m.jpeg",
    sobre:"Técnica en neveras y estufas. Llego puntual, explico el daño antes de cobrar y uso repuestos originales.",
    trabajos:["Reparación de microondas","Arreglo de televisores","Reparación de neveras"],
    galeria:[{f:"nevera-revisada-y-funcionando",c:"Nevera revisada y funcionando"},{f:"estufa-a-gas-revisada",c:"Estufa a gas revisada"}],
@@ -129,7 +129,7 @@ const BASE = [
    trabajos:["Reparación de tanques de agua","Arreglo de fugas","Destape de cañerías"],
    galeria:[{f:"llave-de-cocina-reparada",c:"Llave de cocina reparada"},{f:"lavamanos-de-pedestal-instalado",c:"Lavamanos de pedestal instalado"}],
    res:[{a:"Natalia Duque",t:"Muy amable y cuidadoso dentro de la casa.",c:5,h:"Hace 1 semana"}]},
-  {id:"marleny", nombre:"Marleny Ocampo", cat:"otros", titulo:"Pintora", rating:4.9, n:14, comuna:8, barrio:"Llanaditas", ang:17, anos:9, tel:"300 000 0020", color:"#4E7A3F",
+  {id:"marleny", nombre:"Marleny Ocampo", cat:"otros", titulo:"Pintora", rating:4.9, n:14, comuna:8, barrio:"Llanaditas", ang:17, anos:9, tel:"300 000 0020", color:"#4E7A3F", foto:"img/perfiles/1M.jpeg",
    sobre:"Pinto casas por dentro y por fuera. Resano paredes, quito humedad y dejo todo limpio al terminar.",
    trabajos:["Resane de paredes","Tratamiento de humedad","Pintura de interiores"],
    galeria:[{f:"pintura-con-rodillo",c:"Pintura con rodillo"},{f:"sala-pintada",c:"Sala pintada"}],
@@ -144,7 +144,7 @@ const BASE = [
    trabajos:["Reparación de lavadoras","Revisión de estufas","Reparación de microondas"],
    galeria:[{f:"microondas-empotrado-instalado",c:"Microondas empotrado instalado"},{f:"ventilador-reparado",c:"Ventilador reparado"}],
    res:[{a:"Andrés Felipe Mejía",t:"Explicó bien el problema y cobró lo justo.",c:5,h:"Hace 1 mes"}]},
-  {id:"gustavo", nombre:"Gustavo Henao", cat:"plomeria", titulo:"Plomero", rating:4.9, n:31, comuna:10, barrio:"Prado", ang:218, anos:20, tel:"300 000 0023", color:"#8E7A3E",
+  {id:"gustavo", nombre:"Gustavo Henao", cat:"plomeria", titulo:"Plomero", rating:4.9, n:31, comuna:10, barrio:"Prado", ang:218, anos:20, tel:"300 000 0023", color:"#8E7A3E", foto:"img/perfiles/3h.jpeg",
    sobre:"Veinte años arreglando tuberías en el centro. Conozco bien las casas antiguas y sus instalaciones.",
    trabajos:["Arreglo de fugas","Destape de cañerías","Cambio de tubería"],
    galeria:[{f:"bano-de-casa-antigua-restaurado",c:"Baño de casa antigua restaurado"},{f:"bano-con-sanitario-y-tina",c:"Baño con sanitario y tina"}],
@@ -154,7 +154,7 @@ const BASE = [
    trabajos:["Reparación de muebles","Arreglo de cocinas integrales","Ajuste de puertas"],
    galeria:[{f:"closet-empotrado-en-madera",c:"Closet empotrado en madera"},{f:"closet-corredizo-a-la-medida",c:"Closet corredizo a la medida"}],
    res:[{a:"Sergio Alzate",t:"Resolvió en una sola visita. Excelente.",c:5,h:"Hace 1 semana"},{a:"Luz Dary Gómez",t:"Muy amable y cuidadoso dentro de la casa.",c:5,h:"Hace 2 semanas"}]},
-  {id:"sandra", nombre:"Sandra Milena Tobón", cat:"plomeria", titulo:"Plomera", rating:4.9, n:16, comuna:12, barrio:"La Floresta", ang:352, anos:7, tel:"300 000 0025", color:"#2F5D3A",
+  {id:"sandra", nombre:"Sandra Milena Tobón", cat:"plomeria", titulo:"Plomera", rating:4.9, n:16, comuna:12, barrio:"La Floresta", ang:352, anos:7, tel:"300 000 0025", color:"#2F5D3A", foto:"img/perfiles/5m.jpeg",
    sobre:"Plomera con siete años de experiencia. Instalo calentadores, griferías y sanitarios con garantía.",
    trabajos:["Instalación de calentadores","Cambio de griferías","Reparación de tanques de agua"],
    galeria:[{f:"instalacion-de-ducha-electrica",c:"Instalación de ducha eléctrica"},{f:"llave-mezcladora-instalada",c:"Llave mezcladora instalada"}],
@@ -209,7 +209,7 @@ const BASE = [
    trabajos:["Instalación de duchas eléctricas","Cambio de cableado","Instalación de tomas e interruptores"],
    galeria:[],
    res:[]},
-  {id:"ricardo", nombre:"Ricardo Londoño", cat:"electrodomesticos", titulo:"Técnico en electrodomésticos", rating:4.6, n:10, comuna:80, barrio:"Cabecera San Antonio de Prado", ang:9, anos:9, tel:"300 000 0036", color:"#4E7A3F",
+  {id:"ricardo", nombre:"Ricardo Londoño", cat:"electrodomesticos", titulo:"Técnico en electrodomésticos", rating:4.6, n:10, comuna:80, barrio:"Cabecera San Antonio de Prado", ang:9, anos:9, tel:"300 000 0036", color:"#4E7A3F", foto:"img/perfiles/2h.jpeg",
    sobre:"Técnico en lavadoras, neveras y estufas a gas en San Antonio de Prado y alrededores.",
    trabajos:["Arreglo de televisores","Reparación de neveras","Reparación de lavadoras"],
    galeria:[{f:"estufa-de-tres-puestos-reparada",c:"Estufa de tres puestos reparada"},{f:"estufa-de-induccion-instalada",c:"Estufa de inducción instalada"}],
@@ -311,15 +311,112 @@ const iniciales = n => n.split(" ").filter(Boolean).slice(0,2).map(p=>p[0]).join
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 function avatarSVG(t, alto){
-  if(t.foto && (/^data:image\/(jpeg|png|webp);base64,/.test(t.foto) || /^img\/perfiles\/[\w-]+\.(jpg|png|webp)$/.test(t.foto)))
+  if(t.foto && (/^data:image\/(jpeg|png|webp);base64,/.test(t.foto) || /^img\/perfiles\/[\w-]+\.(jpe?g|png|webp)$/.test(t.foto)))
     return `<img src="${t.foto}" alt="" style="display:block;width:100%;height:100%;object-fit:cover">`;
-  const c = cColor(t.cat), bg = cSuave(t.cat);
-  return `<svg viewBox="0 0 200 ${alto}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="display:block">
-    <rect width="200" height="${alto}" fill="${bg}"/>
-    <circle cx="160" cy="${alto*0.18}" r="${alto*0.32}" fill="${c}" opacity=".12"/>
-    <circle cx="100" cy="${alto*0.42}" r="${alto*0.2}" fill="${c}"/>
-    <path d="M${100-alto*0.38} ${alto} q0 -${alto*0.36} ${alto*0.38} -${alto*0.36} q${alto*0.38} 0 ${alto*0.38} ${alto*0.36}z" fill="${c}" opacity=".85"/>
-    <text x="100" y="${alto*0.42+alto*0.065}" text-anchor="middle" font-family="'Baloo 2',sans-serif" font-weight="700" font-size="${alto*0.18}" fill="var(--surface)">${iniciales(t.nombre)}</text>
+  return retratoSVG(t, alto);
+}
+
+/* ---------- Retratos ilustrados de los trabajadores de ejemplo ----------
+   Personajes ficticios: cada uno tiene rasgos fijos y ropa de trabajo según su oficio.
+   [piel 0-5, estilo de pelo, color de pelo 0-5, barba, gafas, gorro/casco] */
+const RASGOS = {
+  carlos:[2,"corto",0,"bigote",0,1],  andres:[1,"corto",1,"barba",0,1],   maria:[1,"largo",2,"",0,0],
+  julian:[3,"rizado",0,"",0,0],       luis:[2,"calvo",3,"barba",1,0],     diana:[2,"cola",0,"",0,1],
+  oscar:[3,"corto",3,"bigote",0,1],   natalia:[0,"largo",5,"",1,0],       jhon:[4,"rapado",0,"candado",0,1],
+  ramiro:[3,"calvo",4,"bigote",0,1],  liliana:[2,"mono",1,"",1,0],        wilson:[5,"rapado",0,"barba",0,1],
+  gloria:[1,"melena",3,"",1,0],       hernan:[2,"corto",4,"",1,1],        fabio:[3,"corto",0,"candado",0,1],
+  yesenia:[4,"afro",0,"",0,0],        camilo:[1,"corto",2,"",0,1],        albeiro:[3,"corto",3,"bigote",0,0],
+  jairo:[2,"calvo",0,"barba",0,1],    marleny:[3,"mono",3,"",0,1],        esteban:[0,"rizado",5,"",1,0],
+  paula:[2,"largo",0,"",0,0],         gustavo:[4,"corto",3,"bigote",0,1], mauricio:[1,"rapado",1,"barba",1,1],
+  sandra:[2,"cola",2,"",0,1],         felipe:[2,"corto",1,"",1,1],        nestor:[3,"calvo",3,"",0,1],
+  daniela:[5,"afro",0,"",0,0],        rodrigo:[2,"corto",4,"barba",1,1],  claudia:[1,"melena",2,"",0,0],
+  javier:[3,"rizado",1,"candado",0,1], leidy:[3,"largo",0,"",0,1],       arley:[4,"rapado",0,"",0,1],
+  edgar:[1,"calvo",4,"bigote",1,1],   yuliana:[2,"cola",5,"",0,1],        ricardo:[2,"corto",0,"barba",1,0],
+  alonso:[3,"corto",4,"bigote",0,1]
+};
+const PIELES = ["#F3D2B8","#E8B992","#D39A6E","#B97A4F","#8D5A3B","#5E3B26"];
+const PELOS  = ["#1F1A17","#3B2A20","#5E3D27","#8F8984","#BDB7B0","#8A6A3A"];
+function rasgosDe(t){
+  if(RASGOS[t.id]) return RASGOS[t.id];
+  // Perfiles nuevos: rasgos estables a partir del id, sin barba ni gorro (pueden subir su foto)
+  const h = [...String(t.id)].reduce((a, ch) => a * 31 + ch.charCodeAt(0) >>> 0, 11);
+  return [h % 6, ["corto","rapado","rizado","melena","cola","mono"][(h >> 3) % 6], (h >> 6) % 3, "", 0, 0];
+}
+function retratoSVG(t, alto){
+  const [p, estilo, pc, barba, gafas, gorro] = rasgosDe(t), cat = catK(t.cat);
+  const piel = PIELES[p], pelo = PELOS[pc], sombra = "rgba(60,30,20,.18)";
+  // La figura se dibuja en 200×200, se acerca un poco y se apoya en el borde inferior
+  const s = alto / 200 * 1.12, dx = 100 - 100 * s, dy = alto - 200 * s;
+
+  // Ropa de trabajo según el oficio
+  const cuerpo = "M26 200 Q28 152 72 141 L128 141 Q172 152 174 200Z";
+  const ropa = {
+    plomeria: `<path d="${cuerpo}" fill="#8C99A6"/><path d="M68 166 Q68 158 76 158 L124 158 Q132 158 132 166 L136 200 L64 200Z" fill="#2E5E8C"/>
+      <path d="M78 143 L80 160 M122 143 L120 160" stroke="#2E5E8C" stroke-width="7" stroke-linecap="round"/><circle cx="80" cy="162" r="3" fill="#C9D3DC"/><circle cx="120" cy="162" r="3" fill="#C9D3DC"/>
+      <rect x="90" y="172" width="20" height="13" rx="2" fill="#244B72"/>`,
+    electricidad: `<path d="${cuerpo}" fill="#3D5266"/><path d="M50 160 Q60 146 76 142 L84 200 L44 200Z M150 160 Q140 146 124 142 L116 200 L156 200Z" fill="#F2B705"/>
+      <path d="M46 182 L84 182 M116 182 L154 182" stroke="#E8ECEF" stroke-width="5"/><path d="M88 141 L100 156 L112 141" fill="none" stroke="#2C3B4A" stroke-width="3"/>`,
+    electrodomesticos: `<path d="${cuerpo}" fill="#6C4A8E"/><path d="M84 141 L100 160 L116 141 L108 141 L100 150 L92 141Z" fill="#F4F1EC"/>
+      <rect x="118" y="166" width="20" height="16" rx="2" fill="#5A3C78"/><rect x="124" y="160" width="3" height="12" rx="1.5" fill="#E9B949"/><rect x="129" y="161" width="3" height="11" rx="1.5" fill="#6FB1E0"/>`,
+    otros: `<path d="${cuerpo}" fill="#E9E2D6"/><path d="M76 141 L80 200 M124 141 L120 200" stroke="#D3C8B6" stroke-width="4"/>
+      <circle cx="62" cy="176" r="4" fill="#4E9A6B" opacity=".7"/><circle cx="140" cy="186" r="5" fill="#E07A5F" opacity=".7"/><circle cx="104" cy="190" r="3" fill="#3D7AB8" opacity=".7"/><circle cx="128" cy="164" r="2.5" fill="#E9B949" opacity=".8"/>`
+  }[cat];
+
+  // Pelo: parte de atrás (detrás de la cabeza) y parte de adelante
+  const atras = {
+    largo:  `<path d="M60 92 Q58 44 100 42 Q142 44 140 92 L146 156 Q100 168 54 156Z" fill="${pelo}"/>`,
+    melena: `<path d="M60 92 Q58 44 100 42 Q142 44 140 92 L142 130 Q124 136 120 124 L80 124 Q76 136 58 130Z" fill="${pelo}"/>`,
+    cola:   `<path d="M126 66 Q164 76 154 136 Q148 112 132 100Z" fill="${pelo}"/>`,
+    mono:   `<circle cx="100" cy="44" r="15" fill="${pelo}"/>`,
+    afro:   `<circle cx="100" cy="74" r="50" fill="${pelo}"/>`
+  }[estilo] || "";
+  const corto = `M64 94 Q60 50 100 46 Q140 50 136 94 Q132 72 118 66 Q100 74 80 66 Q68 74 64 94Z`;
+  const adelante = {
+    corto:  `<path d="${corto}" fill="${pelo}"/>`,
+    rapado: `<path d="M67 86 Q68 54 100 52 Q132 54 133 86 Q126 66 100 64 Q74 66 67 86Z" fill="${pelo}" opacity=".75"/>`,
+    calvo:  `<path d="M66 100 Q63 82 70 74 L73 100Z M134 100 Q137 82 130 74 L127 100Z" fill="${pelo}"/>`,
+    rizado: `<path d="${corto}" fill="${pelo}"/>` + [[70,80],[76,64],[88,55],[100,52],[112,55],[124,64],[130,80]].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="11" fill="${pelo}"/>`).join(""),
+    largo:  `<path d="M64 104 Q58 48 100 46 Q142 48 136 104 Q130 70 112 62 Q92 78 70 72 Q66 86 64 104Z" fill="${pelo}"/>`,
+    melena: `<path d="M64 98 Q60 48 100 46 Q140 48 136 98 Q134 76 100 74 Q66 76 64 98Z" fill="${pelo}"/>`,
+    cola:   `<path d="M64 94 Q60 48 100 46 Q140 48 136 94 Q130 70 104 66 Q80 70 64 94Z" fill="${pelo}"/>`,
+    mono:   `<path d="M64 94 Q60 50 100 48 Q140 50 136 94 Q130 70 100 66 Q70 70 64 94Z" fill="${pelo}"/>`,
+    afro:   `<path d="${corto}" fill="${pelo}"/>`
+  }[estilo] || "";
+
+  const barbas = {
+    barba:   `<path d="M66 100 Q66 142 100 144 Q134 142 134 100 Q130 120 116 122 Q100 114 84 122 Q70 120 66 100Z" fill="${pelo}"/>`,
+    bigote:  `<path d="M85 115 Q100 106 115 115 Q108 119 100 115 Q92 119 85 115Z" fill="${pelo}"/>`,
+    candado: `<path d="M85 115 Q100 106 115 115 Q108 119 100 115 Q92 119 85 115Z M89 124 Q100 142 111 124 Q100 130 89 124Z" fill="${pelo}"/>`
+  }[barba] || "";
+
+  // Casco, gorra o pañoleta según el oficio (solo algunos la llevan)
+  const gorros = {
+    electricidad: `<path d="M60 86 Q60 40 100 38 Q140 40 140 86Z" fill="#F2B705"/><rect x="54" y="82" width="92" height="9" rx="4.5" fill="#D99E00"/><rect x="96" y="40" width="8" height="44" rx="3" fill="#FFD84D" opacity=".8"/>`,
+    plomeria:     `<path d="M63 84 Q61 46 100 44 Q139 46 137 84Z" fill="#2E5E8C"/><path d="M60 84 Q100 76 152 86 Q152 94 136 92 Q100 86 64 92Z" fill="#244B72"/><circle cx="100" cy="46" r="4" fill="#244B72"/>`,
+    otros:        `<path d="M63 84 Q61 48 100 46 Q139 48 137 84Z" fill="#F1ECE3"/><path d="M61 82 L139 82 L141 91 L59 91Z" fill="#D8CDBA"/>`
+  }[cat];
+  const sombrero = gorro && gorros && estilo !== "afro" ? gorros : "";
+
+  // "meet" + fondo más grande que el lienzo: el retrato nunca se recorta, sea cual sea la forma del contenedor
+  return `<svg viewBox="0 0 200 ${alto}" width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true" style="display:block">
+    <rect x="-1000" y="-1000" width="2200" height="${alto + 2000}" fill="${cSuave(t.cat)}"/>
+    <circle cx="164" cy="${alto*0.2}" r="${alto*0.3}" fill="${cColor(t.cat)}" opacity=".12"/>
+    <g transform="translate(${dx} ${dy}) scale(${s})">
+      ${ropa}${atras}
+      <path d="M86 116 L86 146 Q100 155 114 146 L114 116Z" fill="${piel}"/><path d="M86 128 Q100 138 114 128 L114 120 L86 120Z" fill="${sombra}"/>
+      <ellipse cx="66" cy="98" rx="7" ry="10" fill="${piel}"/><ellipse cx="134" cy="98" rx="7" ry="10" fill="${piel}"/>
+      <ellipse cx="100" cy="94" rx="34" ry="40" fill="${piel}"/>
+      ${barbas}
+      <circle cx="80" cy="108" r="6" fill="#E8907A" opacity=".22"/><circle cx="120" cy="108" r="6" fill="#E8907A" opacity=".22"/>
+      <path d="M80 84 Q87 80 94 84 M106 84 Q113 80 120 84" stroke="${pelo}" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <circle cx="87" cy="94" r="3.6" fill="#2A1E18"/><circle cx="113" cy="94" r="3.6" fill="#2A1E18"/>
+      <circle cx="88.2" cy="92.8" r="1.1" fill="#fff"/><circle cx="114.2" cy="92.8" r="1.1" fill="#fff"/>
+      <path d="M100 98 Q96 107 101 109" stroke="${sombra}" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+      <path d="M90 118 Q100 125 110 118" stroke="${barba === "barba" ? "#F3E3DA" : "#7A3B2E"}" stroke-width="3" stroke-linecap="round" fill="none"/>
+      ${adelante}
+      ${gafas ? `<g fill="none" stroke="#2A2A2A" stroke-width="2.4"><circle cx="87" cy="94" r="9"/><circle cx="113" cy="94" r="9"/><path d="M96 94 H104 M78 92 L68 90 M122 92 L132 90"/></g>` : ""}
+      ${sombrero}
+    </g>
   </svg>`;
 }
 
