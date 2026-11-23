@@ -349,6 +349,12 @@ function lugarCorto(t){
   const km = usaDireccion() ? ` · ${fmtKm(distA(t))}` : "";
   return `${esc(t.barrio)} · ${misma ? `<strong class="misma">${etiqueta}</strong>` : etiqueta}${km}`;
 }
+/* Disponibilidad: el trabajador la activa en su perfil. Los de ejemplo arrancan con un valor fijo por id. */
+let disponibles = store.get("disponibles", {});
+const dispBase = t => !t.nuevo && [...t.id].reduce((h, ch) => h * 31 + ch.charCodeAt(0) >>> 0, 7) % 3 !== 0;
+const disponible = t => t.id in disponibles ? !!disponibles[t.id] : dispBase(t);
+function ponerDisponible(t, v){ disponibles[t.id] = v; store.set("disponibles", disponibles); }
+const chipDisp = t => disponible(t) ? '<span class="chip disp"><span class="punto-disp"></span>Disponible ahora</span>' : "";
 function chipDe(t){ return t.nuevo ? '<span class="chip nuevo">Nuevo</span>' : (distA(t) <= (usaDireccion() ? 1.5 : 2.5) ? '<span class="chip">Cercano</span>' : ""); }
 
 function botonFav(t, cls){
@@ -359,7 +365,7 @@ function botonFav(t, cls){
 function tarjeta(t){
   const {r,n} = ratingDe(t);
   return `<article class="tarjeta" data-abrir="${t.id}" tabindex="0" aria-label="Ver perfil de ${esc(t.nombre)}">
-    <div class="foto">${avatarSVG(t,150)}${chipDe(t)}${botonFav(t)}</div>
+    <div class="foto">${avatarSVG(t,150)}${chipDe(t)}${botonFav(t)}${chipDisp(t)}</div>
     <div class="cuerpo"><h3>${esc(t.nombre)}</h3><div class="oficio" style="--c:${cColor(t.cat)}">${catLabel(t.cat)}</div>
     <div class="meta"><span><span class="estrella">★</span> ${n?fmtR(r):"Sin calificar"} ${n?`(${n} opiniones)`:""}</span><span>${lugarCorto(t)}</span></div></div>
   </article>`;
@@ -420,6 +426,7 @@ function pintarCuenta(){
   } else {
     z.innerHTML = `<a href="#login" class="btn btn-texto ocultar-movil">Iniciar sesión</a><a href="#registro" class="btn btn-primario">Registrarse</a>`;
   }
+  pintarNumServicios();
 }
 
 /* ---------- Inicio ---------- */
@@ -475,19 +482,37 @@ function pintarLadera(){
 }
 
 /* ---------- Búsqueda ---------- */
-const estado = { q:"", comuna:undefined, cats:new Set(), dist:99999, rating:0, orden:"dist" };
+const estado = { q:"", comuna:undefined, cats:new Set(), dist:99999, rating:0, orden:"dist", disp:false };
 const norm = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 
 function pintarFiltros(){
   document.getElementById("filtroCats").innerHTML = CATS.map(c =>
     `<label class="check"><input type="checkbox" value="${c.k}" ${estado.cats.has(c.k)?"checked":""}><span class="punto" style="background:${cColor(c.k)}"></span>${c.label}</label>`).join("");
-  document.getElementById("filtroDist").value = String(estado.dist);
+  document.getElementById("filtroComuna").innerHTML = opcionesComuna(origen(), "Toda Medellín");
+  const fd = document.getElementById("filtroDist"), o = origen();
+  fd.options[1].textContent = o ? `Solo en ${nombreComuna(o)}` : "Solo en una comuna (elígela)";
+  fd.options[2].textContent = o ? `${comunaCorta(o)} y las cercanas` : "Una comuna y las cercanas (elígela)";
+  fd.value = String(estado.dist);
   document.getElementById("filtroRating").value = String(estado.rating);
+  document.getElementById("filtroDisp").checked = estado.disp;
   document.getElementById("orden").value = estado.orden;
   document.getElementById("resQ").value = estado.q;
   const rs = document.getElementById("resS");
   rs.innerHTML = opcionesComuna(origen(), "Toda Medellín");
-  document.getElementById("ayudaDist").textContent = origen() ? (usaDireccion() ? "Cercanas: hasta 3 km de tu dirección." : "") : "Elige una comuna en el buscador para filtrar por cercanía.";
+  // Si pidió cercanía pero no hay comuna, se le pide elegirla en vez de ignorar el filtro en silencio
+  const falta = !o && estado.dist < 99999, ayuda = document.getElementById("ayudaDist");
+  document.getElementById("filtroComuna").classList.toggle("falta", falta);
+  ayuda.classList.toggle("aviso", falta);
+  ayuda.innerHTML = falta
+    ? `¿Cerca de dónde? Elige una comuna o corregimiento para buscar por cercanía. <button class="link" type="button" id="elegirComunaFiltro">Elegir comuna</button>`
+    : esc(o ? (usaDireccion() ? "Cercanas: hasta 3 km de tu dirección." : `Buscando desde el centro de ${nombreComuna(o)}.`)
+            : "Elige una comuna para buscar por cercanía.");
+  const bc = document.getElementById("elegirComunaFiltro");
+  if(bc) bc.onclick = () => {
+    const sel = document.getElementById("filtroComuna");
+    sel.scrollIntoView({block:"center", behavior:"smooth"}); sel.focus();
+    try { sel.showPicker(); } catch(e) {}
+  };
   pintarFormDir();
 }
 
@@ -495,6 +520,7 @@ function filtrar(){
   const q = norm(estado.q.trim());
   let lista = todos().filter(t => {
     if(estado.cats.size && !estado.cats.has(t.cat)) return false;
+    if(estado.disp && !disponible(t)) return false;
     if(estado.dist < 99999 && origen() && (estado.dist === 0 ? +t.comuna !== +origen() : distA(t) > estado.dist)) return false;
     if(ratingDe(t).r < estado.rating) return false;
     if(q){
@@ -504,13 +530,15 @@ function filtrar(){
     }
     return true;
   });
-  lista.sort(estado.orden === "rating" || !origen() ? (a,b)=>ratingDe(b).r-ratingDe(a).r : (a,b)=>(distA(a)-distA(b)) || (ratingDe(b).r-ratingDe(a).r));
+  const porOrden = estado.orden === "rating" || !origen() ? (a,b)=>ratingDe(b).r-ratingDe(a).r : (a,b)=>(distA(a)-distA(b)) || (ratingDe(b).r-ratingDe(a).r);
+  lista.sort((a,b) => (disponible(b) - disponible(a)) || porOrden(a,b));   // los disponibles ahora van primero
   return lista;
 }
 
 function pintarResultados(){
   const lista = filtrar();
-  const donde = origen() ? ` cerca de ${esc(nombreComuna(origen()))}` : " en Medellín";
+  const donde = origen() ? ` cerca de ${esc(nombreComuna(origen()))}`
+    : estado.dist < 99999 ? " en toda Medellín (elige una comuna para filtrar por cercanía)" : " en Medellín";
   document.getElementById("resumenRes").innerHTML = lista.length
     ? `Encontramos ${lista.length} ${lista.length===1?"trabajador":"trabajadores"}${donde}.`
     : `No encontramos trabajadores con esos filtros${donde}.`;
@@ -521,7 +549,7 @@ function pintarResultados(){
       <div class="mini">${avatarSVG(t,200)}</div>
       <div><h3>${esc(t.nombre)}</h3><div class="oficio" style="--c:${cColor(t.cat)}">${catLabel(t.cat)}</div>
         <div class="meta"><span><span class="estrella">★</span> ${n?fmtR(r):"Sin calificar"} ${n?`(${n} opiniones)`:""}</span><span>${lugarCorto(t)}</span><span>${t.anos} ${t.anos==1?"año":"años"} de experiencia</span></div></div>
-      <div class="lado"><div class="fila-top">${chipDe(t)}${botonFav(t)}</div><a class="btn btn-primario" href="#perfil-${t.id}">Ver perfil</a></div>
+      <div class="lado"><div class="fila-top">${chipDisp(t)}${chipDe(t)}${botonFav(t)}</div><a class="btn btn-primario" href="#perfil-${t.id}">Ver perfil</a></div>
     </div>`;
   }).join("") : `<div class="vacio"><strong>Prueba con menos filtros.</strong><br>Quita la distancia o la calificación mínima, o busca otra categoría.<br><button class="btn btn-secundario" style="margin-top:14px" type="button" id="limpiar2">Limpiar filtros</button></div>`;
   const l2 = document.getElementById("limpiar2"); if(l2) l2.onclick = limpiarFiltros;
@@ -814,7 +842,7 @@ function pintarMapaPerfil(t){
 }
 
 function limpiarFiltros(){
-  estado.q=""; estado.comuna=undefined; estado.cats.clear(); estado.dist=99999; estado.rating=0; estado.orden="dist";
+  estado.q=""; estado.comuna=0; estado.cats.clear(); estado.dist=99999; estado.rating=0; estado.orden="dist"; estado.disp=false;
   pintarFiltros(); pintarResultados();
 }
 
@@ -850,13 +878,17 @@ function pintarPerfil(id){
 
   const accionesCab = esMio
     ? `<button class="btn btn-primario" type="button" id="btnEditarPerfil">${ICON.lapiz} Editar perfil</button>
-       <button class="btn btn-borde" type="button" id="btnVistaVecino">${ICON.ojo} Ver como vecino</button>`
-    : `<button class="btn btn-primario" type="button" id="btnContactar">Contactar</button>
+       <button class="btn btn-borde" type="button" id="btnVistaVecino">${ICON.ojo} Ver como vecino</button>
+       <button class="btn btn-borde btn-disp" type="button" id="btnDisp" aria-pressed="${disponible(t)}"><span class="punto-disp"></span>${disponible(t) ? "Disponible ahora" : "No disponible"}</button>`
+    : `<button class="btn btn-primario" type="button" id="btnLlamar">${ICON.telefono} Llamar por Red Vecina</button>
+       <button class="btn btn-secundario" type="button" id="btnContactar">Enviar solicitud</button>
        <button class="btn btn-borde" type="button" id="btnFavPerfil" aria-pressed="${favoritos.has(t.id)}">${favoritos.has(t.id)?"Guardado en favoritos":"Guardar en favoritos"}</button>`;
 
   const banda = !propio ? "" : vistaVecino
     ? `<div class="banda-propia previa">${ICON.ojo}<div><strong>Así ven tu perfil los vecinos.</strong> Los botones de contacto no funcionan en esta vista previa.</div><button class="btn btn-primario" type="button" id="btnSalirPrevia">Volver a editar</button></div>`
     : `<div class="banda-propia"><div><strong>Este es tu perfil público.</strong> Los vecinos lo ven cuando te buscan. Solo tú ves los botones para editarlo.</div></div>`;
+  const nuevasSol = esMio ? solicitudesPara(t).filter(s => s.estado === "enviada").length : 0;
+  const bandaSol = nuevasSol ? `<button type="button" class="banda-servicio" id="irSolicitudes"><span class="nav-num">${nuevasSol}</span><span>Tienes ${nuevasSol === 1 ? "una solicitud de trabajo nueva" : nuevasSol + " solicitudes de trabajo nuevas"}.</span><strong>Ver solicitudes →</strong></button>` : "";
 
   const panelComp = !esMio ? "" : comp.pct === 100
     ? `<div class="panel panel-comp completo"><h2>Tu perfil está completo</h2><p class="texto-vacio">Los perfiles completos generan más confianza. Sigue sumando fotos de tus trabajos nuevos.</p></div>`
@@ -866,19 +898,22 @@ function pintarPerfil(id){
         <ul class="comp-pasos">${comp.pasos.map(p=>`<li class="${p.ok?"hecho":""}">${p.ok?`<span>${esc(p.txt)}</span>`:`<button type="button" class="enlace" data-ir-campo="${p.campo}">${esc(p.txt)}</button>`}</li>`).join("")}</ul>
       </div>`;
 
-  cont.innerHTML = `${banda}<div class="perfil-grid">
+  const enCurso = !propio && activoCon(t);
+  const bandaServ = enCurso ? `<a class="banda-servicio" href="#servicio-${enCurso.id}">${chipEstado(enCurso)}<span>Tienes un servicio en curso con ${esc(primerNombre(t))}.</span><strong>Ver seguimiento →</strong></a>` : "";
+  cont.innerHTML = `${banda}${bandaServ}${bandaSol}<div class="perfil-grid">
     <div>
       <div class="panel panel-principal">
         <div class="perfil-cab">
           <div class="avatar-xl">${t.foto ? `<button type="button" class="ver-foto" data-ver-foto="perfil" aria-label="Ver foto de perfil más grande">${avatarSVG(t,200)}</button>` : avatarSVG(t,200)}</div>
           <div>
-            <h1>${esc(t.nombre)} ${chipDe(t)}</h1>
+            <h1>${esc(t.nombre)} ${chipDe(t)}${chipDisp(t)}</h1>
             <div class="oficio" style="--c:${cColor(t.cat)}">${esc(t.titulo)}</div>
             <div class="meta"><span><span class="estrella">★</span> ${n?fmtR(r):"Sin calificar"} ${n?`(${n} opiniones)`:""}</span><span>${lugarCorto(t)}</span></div>
             <div class="modal-acciones">${accionesCab}</div>
           </div>
         </div>
       </div>
+      ${esMio ? panelSolicitudes(t) : ""}
       <div class="panel"><div class="panel-cab"><h2>Sobre mí</h2>${esMio?`<button type="button" class="enlace" data-ir-campo="eSobre">Editar</button>`:""}</div>
         ${(t.sobre||"").trim() ? `<p class="texto-suave" style="font-size:.92rem">${esc(t.sobre)}</p>` : vacioTxt("Aún no has escrito tu presentación. Cuéntales a tus vecinos qué haces y cómo trabajas.", "Este trabajador aún no ha escrito su presentación.")}</div>
       <div class="panel"><div class="panel-cab"><h2>Trabajos que realizo</h2>${esMio?`<button type="button" class="enlace" data-ir-campo="eTrabajos">Editar</button>`:""}</div>
@@ -901,7 +936,7 @@ function pintarPerfil(id){
         ${t.comuna ? `<div class="mapa-perfil" id="mapaPerfil" role="img" aria-label="Mapa del barrio ${esc(t.barrio)}"></div>
         <p class="nota-mapa">${esMio ? "Los vecinos ven tu barrio resaltado, nunca tu dirección." : "Zona aproximada: el barrio donde trabaja, no su dirección."}</p>` : ""}
         <div class="dato"><span class="dato-ico" style="background:${cSuave(t.cat)};color:${cColor(t.cat)}">${ICON[catK(t.cat)]}</span><div>Especialidad<small>${catLabel(t.cat)}</small></div></div>
-        ${esMio ? `<div class="dato"><span class="dato-ico">${ICON.telefono}</span><div>Tu celular de contacto<small>${esc(t.tel)} · los vecinos lo ven al tocar «Contactar»</small></div></div>` : ""}
+        ${esMio ? `<div class="dato"><span class="dato-ico">${ICON.telefono}</span><div>Tu celular de contacto<small>${esc(t.tel)} · solo lo usa Red Vecina, los vecinos no lo ven</small></div></div>` : ""}
       </div>
       <div class="panel">
         <div class="panel-cab">
@@ -919,17 +954,25 @@ function pintarPerfil(id){
   if(esMio){
     document.getElementById("btnEditarPerfil").onclick = () => abrirEditar();
     document.getElementById("btnVistaVecino").onclick = () => { vistaVecino = true; pintarPerfil(t.id); window.scrollTo(0,0); };
+    document.getElementById("btnDisp").onclick = () => {
+      const v = !disponible(t); ponerDisponible(t, v); pintarPerfil(t.id);
+      toast(v ? "Listo: los vecinos te ven como disponible y apareces primero." : "Listo: ya no apareces como disponible.");
+    };
     cont.querySelectorAll("[data-ir-campo]").forEach(b => b.onclick = () => {
       if(b.dataset.irCampo !== "galeria") return abrirEditar(b.dataset.irCampo);
       document.getElementById("panelGaleria").scrollIntoView({behavior:"smooth", block:"start"});
       const lbl = document.querySelector(".subir-btn"); if(lbl) setTimeout(()=>lbl.focus(), 350);
     });
     conectarGaleriaPropia(t);
+    conectarSolicitudes(t);
+    const irSol = document.getElementById("irSolicitudes");
+    if(irSol) irSol.onclick = () => document.getElementById("panelSol").scrollIntoView({behavior:"smooth", block:"start"});
   } else if(propio){
     document.getElementById("btnSalirPrevia").onclick = () => { vistaVecino = false; pintarPerfil(t.id); };
     const aviso = () => toast("Así verán los vecinos este botón. En tu propio perfil no hace nada.");
-    ["btnContactar","btnFavPerfil","btnCalificar"].forEach(id => document.getElementById(id).onclick = aviso);
+    ["btnLlamar","btnContactar","btnFavPerfil","btnCalificar"].forEach(id => document.getElementById(id).onclick = aviso);
   } else {
+    document.getElementById("btnLlamar").onclick = () => abrirLlamada(t);
     document.getElementById("btnContactar").onclick = () => abrirContacto(t);
     document.getElementById("btnCalificar").onclick = () => abrirCalificar(t);
     document.getElementById("btnFavPerfil").onclick = () => { alternarFav(t.id); pintarPerfil(t.id); };
@@ -1301,6 +1344,7 @@ function pintarCuentaVista(){
   if(!usuario) return;
   const contratadosL = todos().filter(t => contratados.has(t.id));
   const favL = todos().filter(t => favoritos.has(t.id));
+  const servCurso = misServicios().filter(s => ACTIVOS.includes(s.estado)).sort((a,b) => b.creada - a.creada);
   const misRes = [];
   for(const [id, lista] of Object.entries(resenasUsuario)){
     const t = buscarT(id); if(!t) continue;
@@ -1325,13 +1369,18 @@ function pintarCuentaVista(){
         </div>
       </div>
       <div class="panel">
+        <div class="panel-cab"><h2>Servicios en curso</h2><a class="enlace" href="#servicios">Ver todos</a></div>
+        ${servCurso.length ? `<div class="serv-lista">${servCurso.slice(0,3).map(tarjetaServicio).join("")}</div>`
+          : `<p class="texto-vacio">No tienes servicios en curso. Cuando llames a un trabajador o le envíes una solicitud, podrás seguirlo aquí.</p>`}
+      </div>
+      <div class="panel">
         <div class="panel-cab"><h2>Trabajadores que contrataste</h2><span class="contador">${contratadosL.length}</span></div>
         ${contratadosL.length ? contratadosL.map(t => {
             const r = calif(t.id);
             return filaTrab(t, r ? `<span class="calificado"><span class="estrella">${"★".repeat(r.c)}</span> Calificado</span>`
                                 : `<button class="btn btn-secundario btn-chico" type="button" data-calificar="${t.id}">Calificar</button>`);
           }).join("")
-          : `<p class="texto-vacio">Cuando contactes a un trabajador y marques «Ya lo contraté», aparecerá aquí para que lo califiques.</p>`}
+          : `<p class="texto-vacio">Cuando un trabajador termine un servicio contigo, aparecerá aquí para que lo califiques.</p>`}
       </div>
       <div class="panel">
         <div class="panel-cab"><h2>Tus opiniones</h2><span class="contador">${misRes.length}</span></div>
@@ -1357,39 +1406,596 @@ function pintarCuentaVista(){
   cont.querySelectorAll("[data-calificar]").forEach(b => b.onclick = () => abrirCalificar(buscarT(b.dataset.calificar)));
 }
 
-/* ---------- Contacto y calificación ---------- */
-function abrirContacto(t){
-  const d = document.getElementById("dlgContacto");
-  const ya = contratados.has(t.id);
-  document.getElementById("dlgContactoCuerpo").innerHTML = `
-    <h2>Contactar a ${esc(t.nombre.split(" ")[0])}</h2>
-    <p>Llámalo o escríbele para acordar la visita. Después de que haga el trabajo, márcalo como contratado para poder calificarlo.</p>
-    <div class="tel">${t.tel}</div>
-    <p style="font-size:.75rem;margin:0">Número de ejemplo para el prototipo.</p>
-    <div class="modal-acciones">
-      <a class="btn btn-primario" href="tel:${t.tel.replace(/\s/g,"")}">Llamar</a>
-      <button class="btn btn-secundario" type="button" id="btnContratado" ${ya?"disabled":""}>${ya?"Ya lo contrataste":"Ya lo contraté"}</button>
-      <button class="btn btn-texto" type="button" id="cerrarContacto">Cerrar</button>
-    </div>`;
-  document.getElementById("cerrarContacto").onclick = () => d.close();
-  const b = document.getElementById("btnContratado");
-  if(!ya) b.onclick = () => {
-    contratados.add(t.id); store.set("contratados", [...contratados]);
-    d.close(); toast(`Listo. Ya puedes calificar a ${t.nombre.split(" ")[0]}.`);
-  };
-  d.showModal();
+/* ---------- Mis servicios: seguimiento de cada servicio del vecino ---------- */
+const TIPOS = {solicitud:"Solicitud", llamada:"Llamada por Red Vecina", urgente:"Pedido urgente"};
+const ESTADOS = {
+  enviada:      {txt:"Esperando respuesta",   cls:"espera"},
+  respondida:   {txt:"Trabajador disponible", cls:"espera"},
+  acordada:     {txt:"Servicio acordado",     cls:"curso"},
+  terminada:    {txt:"Trabajo terminado",     cls:"ok"},
+  "sin-acuerdo":{txt:"Sin acuerdo",           cls:"fin"},
+  cancelada:    {txt:"Cancelado",             cls:"fin"},
+  rechazada:    {txt:"No pudo atenderte",     cls:"fin"}
+};
+const FINALES = ["cancelada", "sin-acuerdo", "rechazada"];
+const estadoServ = s => s.estado === "terminada" && s.calif ? {txt:"Calificado", cls:"ok"}
+  : s.estado === "acordada" && s.trabTermino ? {txt:"Confirma el trabajo", cls:"espera"}
+  : (ESTADOS[s.estado] || ESTADOS.enviada);
+// Paso del 0 al 3: contacto → acordado → terminado → calificado
+const pasoServ = s => s.calif ? 3 : s.estado === "terminada" ? 2 : s.estado === "acordada" ? 1 : 0;
+const fechaDe = (s, e) => { const h = (s.historial || []).filter(x => x.e === e).pop(); return h ? h.f : (e === "enviada" ? s.creada : null); };
+function fmtCuando(f){
+  const d = new Date(f), hoy = new Date(), ayer = new Date(Date.now() - 864e5);
+  const hora = d.toLocaleTimeString("es-CO", {hour:"numeric", minute:"2-digit"});
+  if(d.toDateString() === hoy.toDateString()) return `Hoy, ${hora}`;
+  if(d.toDateString() === ayer.toDateString()) return `Ayer, ${hora}`;
+  return `${d.toLocaleDateString("es-CO", {day:"numeric", month:"short"})}, ${hora}`;
+}
+function pintarNumServicios(){
+  const n = misServicios().filter(s => ACTIVOS.includes(s.estado)).length;
+  document.querySelectorAll("[data-serv-num]").forEach(el => { el.textContent = n; el.hidden = !n; });
+  document.body.classList.toggle("con-sesion", !!usuario);
+}
+const chipEstado = s => { const e = estadoServ(s); return `<span class="estado-serv ${e.cls}">${e.txt}</span>`; };
+
+function tarjetaServicio(s){
+  const t = buscarT(s.tid), p = pasoServ(s), fin = FINALES.includes(s.estado);
+  return `<a class="serv-card" href="#servicio-${s.id}">
+    <div class="serv-av">${avatarSVG(t,200)}</div>
+    <div class="serv-info">
+      <div class="serv-top"><strong>${esc(t.nombre)}</strong>${chipEstado(s)}</div>
+      <div class="oficio" style="--c:${cColor(t.cat)}">${catLabel(s.cat || t.cat)}</div>
+      ${s.desc ? `<p class="serv-desc">${esc(s.desc)}</p>` : ""}
+      ${fin ? "" : `<div class="serv-prog" role="img" aria-label="Paso ${p+1} de 4">${[0,1,2,3].map(i => `<span class="${i <= p ? "on" : ""}"></span>`).join("")}</div>`}
+      <small>${TIPOS[s.tipo] || "Solicitud"} · ${fmtCuando(s.creada)}</small>
+    </div>
+  </a>`;
 }
 
-function abrirCalificar(t){
+let tabServ = "curso";
+function pintarServicios(id){
+  const cont = document.getElementById("serviciosCont");
+  const todosS = misServicios().slice().sort((a,b) => b.creada - a.creada);
+  if(id) return pintarDetalleServicio(cont, todosS.find(s => s.id === id));
+  const curso = todosS.filter(s => ACTIVOS.includes(s.estado)), hist = todosS.filter(s => !ACTIVOS.includes(s.estado));
+  const lista = tabServ === "curso" ? curso : hist;
+  cont.innerHTML = `<div class="serv-cab">
+      <div><h1>Mis servicios</h1><p>Sigue cada trabajo desde que contactas al trabajador hasta que lo calificas.</p></div>
+      <button type="button" class="btn-urgente" data-urgente><span class="rayo" aria-hidden="true">⚡</span> ¿Es urgente? <strong>Pide a alguien ya</strong></button>
+    </div>
+    <div class="serv-tabs" role="tablist">
+      <button type="button" role="tab" data-tab="curso" aria-selected="${tabServ==="curso"}">En curso <span class="contador">${curso.length}</span></button>
+      <button type="button" role="tab" data-tab="hist" aria-selected="${tabServ==="hist"}">Historial <span class="contador">${hist.length}</span></button>
+    </div>
+    <div class="serv-lista">${lista.length ? lista.map(tarjetaServicio).join("") : `<div class="vacio">
+      <strong>${tabServ === "curso" ? "No tienes servicios en curso." : "Aún no tienes servicios terminados."}</strong><br>
+      ${tabServ === "curso" ? "Cuando llames a un trabajador o le envíes una solicitud, lo verás aquí paso a paso." : "Aquí quedan los servicios terminados, cancelados o sin acuerdo."}
+      <br><a class="btn btn-secundario" style="margin-top:14px" href="#buscar">Buscar trabajadores</a></div>`}</div>`;
+  cont.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tabServ = b.dataset.tab; pintarServicios(); });
+  cont.querySelectorAll("[data-urgente]").forEach(b => b.onclick = abrirUrgente);
+}
+
+function pintarDetalleServicio(cont, s){
+  if(!s){ cont.innerHTML = `<a class="volver" href="#servicios">← Mis servicios</a><div class="vacio"><strong>No encontramos este servicio.</strong><br><a href="#servicios">Ver todos tus servicios</a></div>`; return; }
+  const t = buscarT(s.tid), nom = esc(primerNombre(t)), {r, n} = ratingDe(t);
+  const p = pasoServ(s), fin = FINALES.includes(s.estado);
+  const respondio = fechaDe(s, "respondida");
+  const contacto = {solicitud: respondio ? `Le enviaste una solicitud y ${nom} respondió que está disponible` : "Le enviaste una solicitud", llamada:"Lo llamaste por Red Vecina", urgente:`Pediste ayuda urgente y ${nom} respondió que está disponible`}[s.tipo] || "Lo contactaste";
+
+  // Pasos del seguimiento
+  const pasos = [
+    {t: TIPOS[s.tipo] || "Contacto", d: contacto, f: s.creada},
+    {t: "Servicio acordado", d: p >= 1 ? "Acordaron precio y hora por Red Vecina." : `Hablen por Red Vecina y acuerden precio y hora.`, f: fechaDe(s, "acordada")},
+    {t: "Trabajo terminado", d: p >= 2 ? `Confirmaste que ${nom} terminó el trabajo.` : s.trabTermino ? `${nom} marcó el trabajo como terminado. Falta tu confirmación.` : `Confírmalo aquí cuando ${nom} termine.`, f: fechaDe(s, "terminada")},
+    {t: "Calificación", d: s.calif ? `Le diste ${"★".repeat(s.calif)}` : "Tu opinión ayuda a otros vecinos.", f: fechaDe(s, "calificada")}
+  ];
+  const finPaso = fin ? {t: ESTADOS[s.estado].txt, d: {cancelada:"Cancelaste este servicio.", "sin-acuerdo":"No llegaron a un acuerdo en la llamada.", rechazada:`${nom} no puede tomar este trabajo.`}[s.estado], f: fechaDe(s, s.estado)} : null;
+  const linea = (fin ? pasos.slice(0, p + 1).concat(finPaso) : pasos).map((x, i) => {
+    const cls = fin && i === p + 1 ? "fin" : i < p || (i === p && (p === 3 || fin)) ? "hecho" : i === p ? "actual" : "";
+    return `<li class="${cls}"><span class="tl-punto" aria-hidden="true"></span><div><strong>${x.t}</strong><p>${x.d}</p>${x.f && cls !== "" ? `<small>${fmtCuando(x.f)}</small>` : ""}</div></li>`;
+  }).join("");
+
+  // Qué sigue, según el estado
+  const sig = {
+    enviada:    [`Esperando que ${nom} responda tu solicitud.`, "Si no quieres esperar, llámalo por Red Vecina y acuerden precio y hora.",
+                 `<button class="btn btn-primario" data-acc="llamar">${ICON.telefono} Llamar a ${nom}</button><button class="btn btn-texto" data-acc="cancelar">Cancelar solicitud</button>`],
+    respondida: [`${nom} está disponible para tu pedido.`, "Llámalo por Red Vecina para contarle los detalles y acordar juntos el precio y la hora.",
+                 `<button class="btn btn-primario" data-acc="llamar">${ICON.telefono} Llamar a ${nom}</button><button class="btn btn-texto" data-acc="cancelar">Cancelar pedido</button>`],
+    acordada:   s.trabTermino
+                ? [`${nom} dice que ya terminó el trabajo.`, "¿Quedó todo bien? Confírmalo para cerrar el servicio y calificarlo. Si algo quedó mal, repórtalo.",
+                 `<button class="btn btn-primario" data-acc="terminar">Sí, confirmar y calificar</button><button class="btn btn-borde" data-acc="reportar">Algo quedó mal</button>`]
+                : [`Acordaste el servicio con ${nom}.`, "Cuando termine el trabajo, confírmalo aquí para poder calificarlo.",
+                 `<button class="btn btn-primario" data-acc="terminar">El trabajo ya se hizo</button><button class="btn btn-borde" data-acc="llamar">${ICON.telefono} Llamar</button><button class="btn btn-texto" data-acc="cancelar">Cancelar servicio</button>`],
+    rechazada:  [`${nom} no puede atenderte esta vez.`, "Busca otro trabajador disponible; tu pedido no se perdió.",
+                 `<button class="btn btn-primario" data-acc="disponibles">Ver otros disponibles</button>`],
+    terminada:  s.calif ? [`¡Servicio completo!`, `Calificaste a ${nom} con ${"★".repeat(s.calif)}. Gracias por ayudar a otros vecinos.`,
+                 `<button class="btn btn-secundario" data-acc="otra">${ICON.telefono} Volver a contratar</button>`]
+                : [`¿Cómo te fue con ${nom}?`, "Califica el trabajo. Tu opinión ayuda al siguiente vecino con el mismo problema.",
+                 `<button class="btn btn-primario" data-acc="calificar">Calificar a ${nom}</button>`],
+    "sin-acuerdo": ["No llegaron a un acuerdo.", `Puedes volver a hablar con ${nom} o buscar otro trabajador disponible.`,
+                 `<button class="btn btn-primario" data-acc="disponibles">Ver otros disponibles</button><button class="btn btn-borde" data-acc="llamar">Volver a llamar</button>`],
+    cancelada:  ["Cancelaste este servicio.", "Si todavía necesitas ayuda, busca otro trabajador.",
+                 `<button class="btn btn-primario" data-acc="disponibles">Buscar otro trabajador</button>`]
+  }[s.estado] || ["", "", ""];
+
+  cont.innerHTML = `<a class="volver" href="#servicios">← Mis servicios</a>
+  <div class="perfil-grid servicio">
+    <div>
+      <div class="panel serv-resumen">
+        <div class="serv-top">${chipEstado(s)}<small>${TIPOS[s.tipo] || "Solicitud"} · ${fmtCuando(s.creada)}</small></div>
+        <h1>${esc(catLabel(s.cat || t.cat))} con ${esc(t.nombre)}</h1>
+        <div class="siguiente ${estadoServ(s).cls}"><strong>${sig[0]}</strong><p>${sig[1]}</p><div class="modal-acciones">${sig[2]}</div></div>
+      </div>
+      <div class="panel serv-linea"><h2>Seguimiento</h2><ol class="linea-tiempo">${linea}</ol></div>
+    </div>
+    <div>
+      <div class="panel">
+        <h2>Trabajador</h2>
+        ${filaTrab(t, `<span class="estrella">★</span> ${n ? fmtR(r) : "—"}`)}
+        <p class="texto-vacio" style="margin-top:10px">${esc(t.barrio || "")}${t.comuna ? " · " + esc(comunaCorta(t.comuna)) : ""}. Se comunican por la línea de Red Vecina: ninguno ve el número del otro.</p>
+      </div>
+      <div class="panel">
+        <h2>Detalles</h2>
+        <dl class="serv-datos">
+          ${s.desc ? `<dt>Lo que necesitas</dt><dd>${esc(s.desc)}</dd>` : ""}
+          ${s.fecha ? `<dt>Para cuándo</dt><dd>${esc(fmtFecha(s.fecha))} · ${esc(FRANJAS[s.franja] || "")}</dd>` : ""}
+          ${s.comuna ? `<dt>Dónde</dt><dd>${esc(nombreComuna(s.comuna))}</dd>` : ""}
+          <dt>Cómo empezó</dt><dd>${TIPOS[s.tipo] || "Solicitud"}</dd>
+        </dl>
+      </div>
+      <div class="panel">
+        <h2>¿Algo salió mal?</h2>
+        ${s.reporte ? `<p class="ayuda-filtro aviso">Reportaste un problema ${fmtCuando(s.reporte.f).toLowerCase()}: «${esc(s.reporte.t)}». Red Vecina lo está revisando.</p>`
+          : `<p class="texto-vacio">Como el servicio quedó registrado en Red Vecina, podemos ayudarte si hubo un problema con el trabajo o con el trabajador.</p>
+             <button type="button" class="btn btn-borde btn-chico" data-acc="reportar" style="margin-top:10px">Reportar un problema</button>`}
+      </div>
+    </div>
+  </div>`;
+
+  const acc = {
+    llamar: () => abrirLlamada(t, true, s),
+    otra: () => abrirLlamada(t),
+    terminar: () => { marcarTerminado(t, s); pintarServicios(s.id); abrirCalificar(t, s); },
+    calificar: () => abrirCalificar(t, s),
+    disponibles: () => verDisponibles(catK(s.cat || t.cat)),
+    cancelar: () => {
+      const c = mostrarDlgC(`<h2>¿Cancelar este servicio?</h2><p>${nom} dejará de verlo como pendiente. Si después lo necesitas, puedes volver a contactarlo.</p>
+        <div class="modal-acciones"><button class="btn btn-primario" type="button" id="siCancelar">Sí, cancelar</button><button class="btn btn-texto" type="button" id="cerrarContacto">No, volver</button></div>`);
+      c.querySelector("#siCancelar").onclick = () => { cambiarEstado(s, "cancelada"); dlgC.close(); toast("Cancelaste el servicio."); };
+    },
+    reportar: () => {
+      const c = mostrarDlgC(`<h2>Reportar un problema</h2><p>Cuéntanos qué pasó con el servicio de ${nom}. Lo revisamos con el registro que tenemos.</p>
+        <div class="campo" data-c="rep"><label for="repTxt">¿Qué pasó? <span class="req">*</span></label>
+          <textarea id="repTxt" maxlength="500" placeholder="Ej. No llegó a la hora acordada / El arreglo volvió a fallar."></textarea>
+          <div class="error">Cuéntanos en pocas palabras qué pasó.</div></div>
+        <div class="modal-acciones"><button class="btn btn-primario" type="button" id="enviarRep">Enviar reporte</button><button class="btn btn-texto" type="button" id="cerrarContacto">Cancelar</button></div>`);
+      c.querySelector("#enviarRep").onclick = () => {
+        const v = c.querySelector("#repTxt").value.trim();
+        c.querySelector('[data-c="rep"]').classList.toggle("invalido", v.length < 5);
+        if(v.length < 5) return c.querySelector("#repTxt").focus();
+        s.reporte = {t: sinContacto(v), f: Date.now()}; guardarSolicitudes();
+        dlgC.close(); toast("Recibimos tu reporte. Te contactaremos pronto.");
+      };
+    }
+  };
+  cont.querySelectorAll("[data-acc]").forEach(b => { b.type = "button"; b.onclick = acc[b.dataset.acc]; });
+}
+/* ---------- Bandeja del trabajador: solicitudes que le llegan ----------
+   El trabajador no acepta a ciegas: dice que está disponible, llama al vecino por Red Vecina y,
+   si se ponen de acuerdo, el servicio queda acordado. Al terminar, el vecino confirma. */
+const ESTADOS_TRAB = {
+  enviada:      {txt:"Nueva",                       cls:"espera"},
+  respondida:   {txt:"Le dijiste que estás disponible", cls:"espera"},
+  acordada:     {txt:"Servicio acordado",           cls:"curso"},
+  terminada:    {txt:"Terminado",                   cls:"ok"},
+  "sin-acuerdo":{txt:"Sin acuerdo",                 cls:"fin"},
+  cancelada:    {txt:"Cancelado por el vecino",     cls:"fin"},
+  rechazada:    {txt:"No lo tomaste",               cls:"fin"}
+};
+const solicitudesPara = t => solicitudes.filter(s => s.tid === t.id).sort((a,b) => b.creada - a.creada);
+function vecinoDe(s){
+  const c = cuentas[s.de] || {}, barrio = s.vecBarrio || c.barrio, comuna = s.comuna || s.vecComuna || c.comuna;
+  return { nombre: s.nombre || c.nombre || "Vecino de Red Vecina",
+           lugar: [barrio, comuna ? comunaCorta(comuna) : ""].filter(Boolean).join(" · ") };
+}
+
+function itemSolicitud(s){
+  const v = vecinoDe(s), nomV = esc(v.nombre.split(" ")[0]);
+  const e = s.estado === "acordada" && s.trabTermino ? {txt:"Esperando que el vecino confirme", cls:"espera"}
+          : s.estado === "terminada" && s.calif ? {txt:`Terminado · ${"★".repeat(s.calif)}`, cls:"ok"}
+          : ESTADOS_TRAB[s.estado] || ESTADOS_TRAB.enviada;
+  const acciones = {
+    enviada:    `<button class="btn btn-primario btn-chico" data-sacc="disponible">Estoy disponible</button>
+                 <button class="btn btn-borde btn-chico" data-sacc="llamar">${ICON.telefono} Llamar a ${nomV}</button>
+                 <button class="btn btn-texto btn-chico" data-sacc="rechazar">No puedo atenderlo</button>`,
+    respondida: `<button class="btn btn-primario btn-chico" data-sacc="llamar">${ICON.telefono} Llamar a ${nomV}</button>
+                 <button class="btn btn-texto btn-chico" data-sacc="rechazar">No puedo atenderlo</button>`,
+    acordada:   s.trabTermino ? `<p class="sol-nota">Le avisamos a ${nomV}. Cuando confirme, el servicio queda cerrado y te puede calificar.</p>`
+                : `<button class="btn btn-primario btn-chico" data-sacc="termine">Ya terminé el trabajo</button>
+                   <button class="btn btn-borde btn-chico" data-sacc="llamar">${ICON.telefono} Llamar a ${nomV}</button>`
+  }[s.estado] || "";
+  return `<div class="sol-item ${ACTIVOS.includes(s.estado) ? "" : "cerrada"}" data-sol="${s.id}">
+    <div class="sol-cab">
+      <div class="avatar-ini" aria-hidden="true">${iniciales(v.nombre)}</div>
+      <div class="sol-quien"><strong>${esc(v.nombre)}</strong><small>${esc(v.lugar || "Medellín")}</small></div>
+      <span class="estado-serv ${e.cls}">${e.txt}</span>
+    </div>
+    ${s.desc ? `<p class="sol-desc">${esc(s.desc)}</p>` : ""}
+    <div class="sol-meta">${s.tipo === "urgente" ? `<span class="sol-urgente">⚡ Urgente</span>` : ""}<span>${TIPOS[s.tipo] || "Solicitud"} · ${fmtCuando(s.creada)}</span>
+      ${s.fecha ? `<span>Para el ${esc(fmtFecha(s.fecha))} · ${esc((FRANJAS[s.franja] || "").toLowerCase())}</span>` : ""}</div>
+    ${acciones ? `<div class="modal-acciones">${acciones}</div>` : ""}
+  </div>`;
+}
+
+function panelSolicitudes(t){
+  const todas = solicitudesPara(t), activas = todas.filter(s => ACTIVOS.includes(s.estado)), cerradas = todas.filter(s => !ACTIVOS.includes(s.estado));
+  const nuevas = activas.filter(s => s.estado === "enviada").length;
+  return `<div class="panel panel-sol" id="panelSol">
+    <div class="panel-cab"><h2>Solicitudes de trabajo</h2>${nuevas ? `<span class="nav-num">${nuevas} ${nuevas === 1 ? "nueva" : "nuevas"}</span>` : `<span class="contador">${activas.length}</span>`}</div>
+    ${activas.length ? activas.map(itemSolicitud).join("")
+      : `<p class="texto-vacio">Aún no tienes solicitudes activas. Cuando un vecino te pida un trabajo, aparecerá aquí. Mantente como <strong>Disponible ahora</strong> para aparecer primero en las búsquedas.</p>`}
+    ${cerradas.length ? `<details class="sol-hist"><summary>Historial (${cerradas.length})</summary>${cerradas.map(itemSolicitud).join("")}</details>` : ""}
+    <p class="nota-sol" style="margin-top:12px">Ves el nombre y el barrio del vecino, nunca su celular ni su dirección exacta. Todo se habla por Red Vecina.</p>
+  </div>`;
+}
+
+function conectarSolicitudes(t){
+  const panel = document.getElementById("panelSol"); if(!panel) return;
+  panel.querySelectorAll("[data-sacc]").forEach(b => {
+    b.type = "button";
+    const s = solicitudes.find(x => x.id === b.closest("[data-sol]").dataset.sol), nomV = vecinoDe(s).nombre.split(" ")[0];
+    b.onclick = {
+      disponible: () => { cambiarEstado(s, "respondida"); pintarPerfil(t.id); toast(`Le avisamos a ${nomV} que estás disponible. Llámalo para acordar el servicio.`); },
+      llamar: () => llamarVecino(s),
+      rechazar: () => {
+        const c = mostrarDlgC(`<h2>¿No puedes atender a ${esc(nomV)}?</h2><p>Le avisaremos para que busque a otro trabajador. No afecta tu calificación.</p>
+          <div class="modal-acciones"><button class="btn btn-primario" type="button" id="siRechazar">Sí, no puedo</button><button class="btn btn-texto" type="button" id="cerrarContacto">Volver</button></div>`);
+        c.querySelector("#siRechazar").onclick = () => { cambiarEstado(s, "rechazada"); dlgC.close(); toast(`Le avisamos a ${nomV}.`); };
+      },
+      termine: () => { s.trabTermino = Date.now(); (s.historial = s.historial || []).push({e:"trab-termino", f:s.trabTermino}); guardarSolicitudes();
+        pintarPerfil(t.id); toast(`Listo. Le pedimos a ${nomV} que confirme el trabajo.`); }
+    }[b.dataset.sacc];
+  });
+}
+
+/* Llamada simulada del trabajador al vecino, también por la línea de Red Vecina */
+function llamarVecino(s){
+  const v = vecinoDe(s), nomV = esc(v.nombre.split(" ")[0]);
+  const c = mostrarDlgC(`<div class="llamada">
+      <div class="llamada-avatar avatar-ini grande">${iniciales(v.nombre)}</div>
+      <h2>${esc(v.nombre)}</h2>
+      <p class="llamada-estado" id="llEstado" aria-live="polite">Llamando por la línea de Red Vecina…</p>
+      <p>Ni tú ni ${nomV} ven el número del otro. Acuerden juntos el precio y la hora.</p>
+      <p class="nota-sol">Prototipo: la llamada es simulada.</p>
+      <button class="btn btn-colgar" type="button" id="btnColgar">${ICON.telefono} Colgar</button>
+    </div>`);
+  const est = c.querySelector("#llEstado"); let seg = 0, contesto = false;
+  timersC.push(setTimeout(() => {
+    contesto = true; c.querySelector(".llamada").classList.add("en-curso");
+    const pinta = () => est.textContent = `En llamada · ${Math.floor(seg/60)}:${String(seg%60).padStart(2,"0")}`;
+    pinta(); timersC.push(setInterval(() => { seg++; pinta(); }, 1000));
+  }, 2500));
+  c.querySelector("#btnColgar").onclick = () => {
+    limpiarTimersC();
+    if(!contesto){
+      const c2 = mostrarDlgC(`<h2>${nomV} no contestó</h2><p>Intenta de nuevo en un rato. La solicitud sigue en tu bandeja.</p>
+        <div class="modal-acciones"><button class="btn btn-primario" type="button" id="reLlamar">Volver a llamar</button><button class="btn btn-texto" type="button" id="cerrarContacto">Cerrar</button></div>`);
+      c2.querySelector("#reLlamar").onclick = () => llamarVecino(s);
+      return;
+    }
+    const c2 = mostrarDlgC(`<h2>¿Acordaron el servicio?</h2><p>Si quedaste con ${nomV}, el servicio queda registrado en Red Vecina y, al terminar, te podrá calificar.</p>
+      <div class="modal-acciones"><button class="btn btn-primario" type="button" id="siAcuerdo">Sí, acordamos</button><button class="btn btn-borde" type="button" id="noAcuerdo">No acordamos</button></div>`);
+    c2.querySelector("#siAcuerdo").onclick = () => { cambiarEstado(s, "acordada"); dlgC.close(); toast(`Servicio acordado con ${v.nombre.split(" ")[0]}.`); };
+    c2.querySelector("#noAcuerdo").onclick = () => { cambiarEstado(s, "sin-acuerdo"); dlgC.close(); };
+  };
+}
+
+// Al cerrar un modal (llamada, solicitud, cancelación, reporte) se actualiza la vista para reflejar el nuevo estado
+document.getElementById("dlgContacto").addEventListener("close", () => {
+  if(vistaActual === "servicios") refrescar();
+  else if(vistaActual === "cuenta") pintarCuentaVista();
+  else if(vistaActual === "perfil" && location.hash.startsWith("#perfil-")) pintarPerfil(location.hash.slice(8));
+});
+
+/* ---------- Contacto y calificación ---------- */
+/* El celular del trabajador nunca se muestra: el vecino envía una solicitud por Red Vecina.
+   Así el servicio se acuerda dentro de la plataforma y la calificación queda respaldada. */
+let solicitudes = store.get("solicitudes", []);
+const FRANJAS = {manana:"En la mañana (7 a. m. – 12 m.)", tarde:"En la tarde (12 m. – 6 p. m.)", cualquiera:"A cualquier hora"};
+// Quita celulares, teléfonos y correos que alguien escriba en el mensaje
+const RE_TEL = /(?:\+?57[\s.-]*)?(?:\d[\s.-]*){7,}\d/g, RE_CORREO = /[^\s@]+@[^\s@]+\.[^\s@]+/g;
+const traeContacto = s => { RE_TEL.lastIndex = RE_CORREO.lastIndex = 0; return RE_TEL.test(s) || RE_CORREO.test(s); };
+const sinContacto = s => s.replace(RE_CORREO, "[correo oculto]").replace(RE_TEL, "[número oculto]");
+const fmtFecha = f => new Date(f + "T12:00").toLocaleDateString("es-CO", {weekday:"long", day:"numeric", month:"long"});
+const hoyISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+
+/* Todos los contactos (solicitud, llamada, pedido urgente) se registran en `solicitudes`.
+   Estados: enviada / acordada (pendientes) → terminada; o sin-acuerdo. */
+const primerNombre = t => t.nombre.split(" ")[0];
+const dlgC = document.getElementById("dlgContacto");
+let timersC = [];
+const limpiarTimersC = () => { timersC.forEach(clearTimeout); timersC = []; };   // clearTimeout también detiene intervalos
+dlgC.addEventListener("close", limpiarTimersC);
+function mostrarDlgC(html){
+  limpiarTimersC();
+  const c = document.getElementById("dlgContactoCuerpo");
+  c.innerHTML = html;
+  const b = c.querySelector("#cerrarContacto"); if(b) b.onclick = () => dlgC.close();
+  c.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener("click", () => dlgC.close()));
+  if(!dlgC.open) dlgC.showModal();
+  return c;
+}
+function pedirCuenta(titulo, texto){
+  mostrarDlgC(`<h2>${titulo}</h2><p>${texto}</p>
+    <div class="modal-acciones"><a class="btn btn-primario" href="#registro">Registrarme</a><a class="btn btn-borde" href="#login">Ya tengo cuenta</a><button class="btn btn-texto" type="button" id="cerrarContacto">Cerrar</button></div>`);
+}
+function guardarSolicitudes(){ store.set("solicitudes", solicitudes); pintarNumServicios(); }
+function registrarContacto(t, datos){
+  const f = Date.now();
+  // Cada servicio guarda su historial para mostrar el seguimiento paso a paso
+  const historial = datos.tipo === "urgente" ? [{e:"enviada", f}, {e:datos.estado, f}] : [{e:datos.estado, f}];
+  // Del vecino solo se guarda nombre, barrio y comuna para el trabajador; nunca su celular ni su dirección
+  const rec = { id: f.toString(36), tid: t.id, de: usuario.tel, nombre: usuario.nombre, vecBarrio: usuario.barrio, vecComuna: usuario.comuna, creada: f, historial, ...datos };
+  solicitudes.push(rec); guardarSolicitudes();
+  return rec;
+}
+function cambiarEstado(rec, e){
+  rec.estado = e; (rec.historial = rec.historial || [{e:"enviada", f:rec.creada}]).push({e, f:Date.now()});
+  guardarSolicitudes();
+}
+const misServicios = () => usuario ? solicitudes.filter(s => s.de === usuario.tel && buscarT(s.tid)) : [];
+const ACTIVOS = ["enviada", "respondida", "acordada"];
+const activoCon = t => misServicios().filter(s => s.tid === t.id && ACTIVOS.includes(s.estado)).pop();
+// Solo un servicio ya acordado puede marcarse como terminado
+const pendienteDe = t => misServicios().filter(s => s.tid === t.id && s.estado === "acordada").pop();
+function marcarTerminado(t, rec){
+  cambiarEstado(rec, "terminada");
+  contratados.add(t.id); store.set("contratados", [...contratados]);
+}
+/* Lleva a la búsqueda mostrando solo los disponibles de una categoría */
+function verDisponibles(cat){
+  estado.disp = true; estado.cats = new Set(cat ? [cat] : []);
+  dlgC.close();
+  if(location.hash === "#buscar"){ pintarFiltros(); pintarResultados(); } else location.hash = "#buscar";
+}
+
+/* ----- Llamada por Red Vecina (número puente simulado) ----- */
+function abrirLlamada(t, forzar, rec){   // rec: pedido urgente del que viene la llamada, si lo hay
+  const nom = esc(primerNombre(t));
+  if(!usuario) return pedirCuenta(`Llama a ${nom} por Red Vecina`,
+    "Para llamar necesitas una cuenta. La llamada pasa por la línea de Red Vecina: ni tú ni el trabajador ven el número del otro, y queda registrada para que puedas calificarlo.");
+  if(!disponible(t) && !forzar){
+    const c = mostrarDlgC(`<h2>${nom} no está disponible ahora</h2>
+      <p>Marcó que en este momento no está tomando trabajos, así que puede que no conteste. Si es urgente, busca a alguien disponible.</p>
+      <div class="modal-acciones">
+        <button class="btn btn-primario" type="button" id="verDisp">Ver disponibles ahora</button>
+        <button class="btn btn-secundario" type="button" id="llamarIgual">Llamar de todos modos</button>
+        <button class="btn btn-texto" type="button" id="dejarSol">Dejarle una solicitud</button>
+      </div>`);
+    c.querySelector("#verDisp").onclick = () => verDisponibles(catK(t.cat));
+    c.querySelector("#llamarIgual").onclick = () => abrirLlamada(t, true);
+    c.querySelector("#dejarSol").onclick = () => abrirContacto(t);
+    return;
+  }
+  const c = mostrarDlgC(`<div class="llamada">
+      <div class="llamada-avatar">${avatarSVG(t,200)}</div>
+      <h2>${esc(t.nombre)}</h2>
+      <p class="llamada-estado" id="llEstado" aria-live="polite">Llamando por la línea de Red Vecina…</p>
+      <p>Ni tú ni ${nom} ven el número del otro. La llamada queda registrada para que puedas calificarlo después.</p>
+      <p class="nota-sol">Prototipo: la llamada es simulada.</p>
+      <button class="btn btn-colgar" type="button" id="btnColgar">${ICON.telefono} Colgar</button>
+    </div>`);
+  const est = c.querySelector("#llEstado");
+  let seg = 0, contesto = false;
+  timersC.push(setTimeout(() => {
+    contesto = true; c.querySelector(".llamada").classList.add("en-curso");
+    const pinta = () => est.textContent = `En llamada · ${Math.floor(seg/60)}:${String(seg%60).padStart(2,"0")}`;
+    pinta(); timersC.push(setInterval(() => { seg++; pinta(); }, 1000));
+  }, 2500));
+  c.querySelector("#btnColgar").onclick = () => { limpiarTimersC(); despuesLlamada(t, contesto, rec); };
+}
+function despuesLlamada(t, contesto, rec){
+  const nom = esc(primerNombre(t));
+  if(!contesto){
+    const c = mostrarDlgC(`<h2>${nom} no contestó</h2><p>Puede estar en otro trabajo. Intenta de nuevo, déjale una solicitud o busca a otro trabajador disponible.</p>
+      <div class="modal-acciones">
+        <button class="btn btn-primario" type="button" id="reLlamar">Volver a llamar</button>
+        <button class="btn btn-secundario" type="button" id="verDisp">Ver otros disponibles</button>
+        <button class="btn btn-texto" type="button" id="dejarSol">Dejarle una solicitud</button>
+      </div>`);
+    c.querySelector("#reLlamar").onclick = () => abrirLlamada(t, true, rec);
+    c.querySelector("#verDisp").onclick = () => verDisponibles(catK(t.cat));
+    c.querySelector("#dejarSol").onclick = () => abrirContacto(t);
+    return;
+  }
+  const c = mostrarDlgC(`<h2>¿Acordaron el servicio?</h2>
+    <p>Si quedaste con ${nom}, lo registramos para que puedas calificarlo cuando termine. Si algo sale mal, Red Vecina tiene el registro.</p>
+    <div class="modal-acciones">
+      <button class="btn btn-primario" type="button" id="siAcuerdo">Sí, acordamos</button>
+      <button class="btn btn-borde" type="button" id="noAcuerdo">No acordamos</button>
+    </div>`);
+  c.querySelector("#siAcuerdo").onclick = () => {
+    if(rec) cambiarEstado(rec, "acordada");
+    else registrarContacto(t, {tipo:"llamada", estado:"acordada"});
+    dlgC.close(); toast(`Servicio acordado con ${primerNombre(t)}. Síguelo en Mis servicios.`);
+  };
+  c.querySelector("#noAcuerdo").onclick = () => {
+    if(rec) cambiarEstado(rec, "sin-acuerdo");
+    else registrarContacto(t, {tipo:"llamada", estado:"sin-acuerdo"});
+    dlgC.close();
+  };
+}
+
+/* ----- Pedido urgente: se envía a todos los disponibles cercanos y el primero que acepta lo toma (simulado) ----- */
+function abrirUrgente(){
+  if(!usuario) return pedirCuenta("Pide a alguien ya",
+    "Para enviar un pedido urgente necesitas una cuenta. Así el trabajador que acepte puede comunicarse contigo por Red Vecina.");
+  const catIni = estado.cats.size === 1 ? [...estado.cats][0] : "";
+  const c = mostrarDlgC(`<h2><span aria-hidden="true">⚡</span> Pide a alguien ya</h2>
+    <p>Se lo enviamos a todos los trabajadores <strong>disponibles ahora</strong> cerca de ti. Te mostramos quién está disponible y hablan por Red Vecina para acordar el servicio.</p>
+    <form id="formUrg" novalidate>
+      <div class="campos-2">
+        <div class="campo" data-c="cat"><label for="urgCat">Servicio <span class="req">*</span></label>
+          <select id="urgCat"><option value="">Elige el servicio</option>${CATS.map(k => `<option value="${k.k}" ${k.k===catIni?"selected":""}>${k.label}</option>`).join("")}</select>
+          <div class="error">Elige el tipo de servicio.</div></div>
+        <div class="campo" data-c="comuna"><label for="urgComuna">¿Dónde? <span class="req">*</span></label>
+          <select id="urgComuna">${opcionesComuna(origen(), "Elige tu comuna")}</select>
+          <div class="error">Elige tu comuna o corregimiento.</div></div>
+      </div>
+      <div class="campo" data-c="desc"><label for="urgDesc">¿Qué pasa? <span class="req">*</span></label>
+        <textarea id="urgDesc" maxlength="300" placeholder="Ej. Se rompió un tubo debajo del lavaplatos y está saliendo mucha agua."></textarea>
+        <div class="error">Cuéntanos en pocas palabras qué pasa (mínimo 10 letras).</div>
+        <p class="ayuda-filtro aviso" id="urgAviso" hidden>Por tu seguridad, los números de teléfono y correos se ocultan.</p></div>
+      <p class="nota-sol">Prototipo: el envío y la respuesta del trabajador son simulados.</p>
+      <div class="modal-acciones">
+        <button class="btn btn-mango" type="submit">Enviar a los disponibles</button>
+        <button class="btn btn-texto" type="button" id="cerrarContacto">Cancelar</button>
+      </div>
+    </form>`);
+  const desc = c.querySelector("#urgDesc"), aviso = c.querySelector("#urgAviso");
+  desc.oninput = () => { aviso.hidden = !traeContacto(desc.value); };
+  c.querySelector("#formUrg").onsubmit = e => {
+    e.preventDefault();
+    const cat = c.querySelector("#urgCat").value, comuna = +c.querySelector("#urgComuna").value || 0, texto = desc.value.trim();
+    const ok = {cat: !!cat, comuna: !!comuna, desc: texto.replace(/\s/g,"").length >= 10};
+    Object.keys(ok).forEach(k => c.querySelector(`[data-c="${k}"]`).classList.toggle("invalido", !ok[k]));
+    const malo = Object.keys(ok).find(k => !ok[k]);
+    if(malo) return c.querySelector({cat:"#urgCat", comuna:"#urgComuna", desc:"#urgDesc"}[malo]).focus();
+    buscarUrgente(cat, comuna, sinContacto(texto));
+  };
+}
+function buscarUrgente(cat, comuna, desc){
+  const centro = comunaDe(comuna).c;
+  let cand = todos().filter(x => catK(x.cat) === cat && disponible(x) && !esPropio(x) && puntoDe(x))
+    .map(x => ({t:x, d: distKm(centro, puntoDe(x))})).sort((a,b) => a.d - b.d);
+  const cerca = cand.filter(x => x.d <= 5);
+  cand = (cerca.length ? cerca : cand).slice(0, 6);
+  if(!cand.length){
+    const c = mostrarDlgC(`<h2>No hay nadie disponible ahora</h2>
+      <p>En este momento ningún trabajador de ${esc(catLabel(cat))} está marcado como disponible. Puedes ver a todos y dejarle una solicitud al que prefieras.</p>
+      <div class="modal-acciones"><button class="btn btn-primario" type="button" id="verTodos">Ver trabajadores de ${esc(catLabel(cat))}</button><button class="btn btn-texto" type="button" id="cerrarContacto">Cerrar</button></div>`);
+    c.querySelector("#verTodos").onclick = () => { estado.disp = false; estado.cats = new Set([cat]); dlgC.close();
+      if(location.hash === "#buscar"){ pintarFiltros(); pintarResultados(); } else location.hash = "#buscar"; };
+    return;
+  }
+  const n = cand.length;
+  mostrarDlgC(`<div class="urg-buscando">
+      <div class="radar" aria-hidden="true"></div>
+      <h2>Buscando a alguien…</h2>
+      <p aria-live="polite">Enviamos tu pedido a ${n} ${n===1?"trabajador disponible":"trabajadores disponibles"} de ${esc(catLabel(cat))} cerca de ${esc(nombreComuna(comuna))}.</p>
+      <div class="urg-avatares">${cand.map(x => `<span title="${esc(x.t.nombre)}">${avatarSVG(x.t,80)}</span>`).join("")}</div>
+      <button class="btn btn-texto" type="button" id="cerrarContacto">Cancelar pedido</button>
+    </div>`);
+  timersC.push(setTimeout(() => {
+    const w = cand[0], t = w.t, {r, n:nr} = ratingDe(t);
+    const eta = Math.max(15, Math.round((10 + w.d * 6) / 5) * 5);
+    // Responder no es aceptar: el servicio solo queda acordado cuando los dos hablan y se ponen de acuerdo
+    const rec = registrarContacto(t, {tipo:"urgente", estado:"respondida", cat, comuna, desc}), nom = esc(primerNombre(t));
+    const c = mostrarDlgC(`<div class="urg-acepto">
+        <div class="llamada-avatar">${avatarSVG(t,200)}</div>
+        <span class="chip disp"><span class="punto-disp"></span>Disponible para tu pedido</span>
+        <h2>${esc(t.nombre)} puede atenderte</h2>
+        <div class="meta"><span><span class="estrella">★</span> ${nr ? fmtR(r) : "Sin calificar"}</span><span>${esc(t.barrio || "")}</span><span>${fmtKm(w.d)}</span></div>
+        <p>Vio tu pedido y está disponible. Llámalo por Red Vecina para contarle los detalles y acordar juntos el precio y la hora.</p>
+        <p class="nota-sol">Está cerca: si se ponen de acuerdo, podría llegar en unos ${eta} minutos.</p>
+        <div class="modal-acciones">
+          <button class="btn btn-primario" type="button" id="urgLlamar">${ICON.telefono} Llamar a ${nom}</button>
+          <a class="btn btn-borde" href="#perfil-${t.id}">Ver perfil</a>
+          <button class="btn btn-texto" type="button" id="urgOtros">Ver otros disponibles</button>
+        </div>
+      </div>`);
+    c.querySelector("#urgLlamar").onclick = () => abrirLlamada(t, true, rec);
+    c.querySelector("#urgOtros").onclick = () => verDisponibles(cat);
+  }, 3500));
+}
+
+/* ----- Solicitud para lo que puede esperar ----- */
+function abrirContacto(t, nueva){
+  const d = dlgC, c = document.getElementById("dlgContactoCuerpo");
+  const nom = esc(primerNombre(t));
+  const cerrar = () => { const b = document.getElementById("cerrarContacto"); if(b) b.onclick = () => d.close(); };
+  limpiarTimersC();
+
+  if(!usuario) return pedirCuenta(`Solicita el servicio de ${nom}`,
+    "Para enviar una solicitud necesitas una cuenta. Todo se acuerda dentro de Red Vecina, así tienes el historial del trabajo y puedes calificarlo al final.");
+
+  const previa = activoCon(t);
+  if(previa && !nueva){
+    const acordado = previa.estado === "acordada";
+    const cuando = new Date(previa.creada).toLocaleDateString("es-CO", {day:"numeric", month:"long"});
+    const cc = mostrarDlgC(`<h2>${acordado ? `Tienes un servicio acordado con ${nom}` : `Ya tienes un servicio en curso con ${nom}`}</h2>
+      <div class="resumen-sol">
+        ${previa.fecha ? `<p><strong>Para:</strong> ${esc(fmtFecha(previa.fecha))} · ${esc(FRANJAS[previa.franja])}</p>`
+                       : `<p><strong>${TIPOS[previa.tipo] || "Contacto"}:</strong> ${esc(cuando)}</p>`}
+        ${previa.desc ? `<p><strong>Lo que necesitas:</strong> ${esc(previa.desc)}</p>` : ""}
+      </div>
+      <p>${acordado ? "Cuando termine el trabajo, márcalo para poder calificarlo." : `Aún no han acordado el servicio. Llama a ${nom} por Red Vecina para cuadrar precio y hora.`}</p>
+      <div class="modal-acciones">
+        ${acordado ? `<button class="btn btn-primario" type="button" id="btnTerminado">El trabajo ya se hizo</button>`
+                   : `<button class="btn btn-primario" type="button" id="btnLlamarPrevia">${ICON.telefono} Llamar a ${nom}</button>`}
+        <a class="btn btn-borde" href="#servicio-${previa.id}">Ver seguimiento</a>
+        <button class="btn btn-texto" type="button" id="btnOtraSol">Enviar otra solicitud</button>
+      </div>`);
+    cc.querySelector("#btnOtraSol").onclick = () => abrirContacto(t, true);
+    if(acordado) cc.querySelector("#btnTerminado").onclick = () => { marcarTerminado(t, previa); dlgC.close(); abrirCalificar(t, previa); };
+    else cc.querySelector("#btnLlamarPrevia").onclick = () => abrirLlamada(t, true, previa);
+    return;
+  }
+
+  c.innerHTML = `<h2>Solicita el servicio de ${nom}</h2>
+    <p>Cuéntale qué necesitas. ${nom} recibe tu solicitud en Red Vecina y te responde por aquí.</p>
+    <form id="formSol" novalidate>
+      <div class="campo" data-c="desc"><label for="solDesc">¿Qué necesitas? <span class="req">*</span></label>
+        <textarea id="solDesc" maxlength="500" placeholder="Ej. El lavaplatos de la cocina gotea por debajo desde ayer."></textarea>
+        <div class="error">Cuéntale en pocas palabras qué necesitas (mínimo 10 letras).</div>
+        <p class="ayuda-filtro aviso" id="solAvisoContacto" hidden>Por tu seguridad, los números de teléfono y correos se ocultan. Todo se acuerda dentro de Red Vecina.</p></div>
+      <div class="campos-2">
+        <div class="campo" data-c="fecha"><label for="solFecha">¿Para cuándo? <span class="req">*</span></label>
+          <input id="solFecha" type="date" min="${hoyISO()}" value="${hoyISO()}"><div class="error">Elige una fecha de hoy en adelante.</div></div>
+        <div class="campo"><label for="solFranja">Horario</label>
+          <select id="solFranja">${Object.entries(FRANJAS).map(([k,v]) => `<option value="${k}">${v}</option>`).join("")}</select></div>
+      </div>
+      <p class="nota-sol">Prototipo: la solicitud se guarda en este navegador.</p>
+      <div class="modal-acciones">
+        <button class="btn btn-primario" type="submit">Enviar solicitud</button>
+        <button class="btn btn-texto" type="button" id="cerrarContacto">Cancelar</button>
+      </div>
+    </form>`;
+  const desc = document.getElementById("solDesc"), avisoC = document.getElementById("solAvisoContacto");
+  desc.oninput = () => { avisoC.hidden = !traeContacto(desc.value); };
+  document.getElementById("formSol").onsubmit = e => {
+    e.preventDefault();
+    const texto = desc.value.trim(), fecha = document.getElementById("solFecha").value;
+    const okDesc = texto.replace(/\s/g,"").length >= 10, okFecha = !!fecha && fecha >= hoyISO();
+    c.querySelector('[data-c="desc"]').classList.toggle("invalido", !okDesc);
+    c.querySelector('[data-c="fecha"]').classList.toggle("invalido", !okFecha);
+    if(!okDesc) return desc.focus();
+    if(!okFecha) return document.getElementById("solFecha").focus();
+    registrarContacto(t, {tipo:"solicitud", desc: sinContacto(texto), fecha, franja: document.getElementById("solFranja").value, estado:"enviada"});
+    d.close(); toast(`Solicitud enviada a ${primerNombre(t)}. Síguela en Mis servicios.`);
+  };
+  cerrar(); if(!d.open) d.showModal(); desc.focus();
+}
+
+function abrirCalificar(t, rec){   // rec: el servicio que se califica (si no se da, el último terminado sin calificar)
   const d = document.getElementById("dlgCalificar");
   const c = document.getElementById("dlgCalificarCuerpo");
   if(!contratados.has(t.id)){
-    c.innerHTML = `<h2>Primero contrátalo</h2>
-      <p>Solo pueden calificar los vecinos que contrataron a ${esc(t.nombre.split(" ")[0])} desde Red Vecina. Así las opiniones vienen de vecinos reales.</p>
-      <div class="modal-acciones"><button class="btn btn-primario" type="button" id="irContacto">Contactar ahora</button><button class="btn btn-texto" type="button" id="cerrarCal">Cerrar</button></div>`;
+    const pend = pendienteDe(t), nom = esc(primerNombre(t));
+    c.innerHTML = pend
+      ? `<h2>¿${nom} ya hizo el trabajo?</h2>
+        <p>Tienes un servicio con ${nom} registrado en Red Vecina. Si ya terminó, márcalo y califícalo.</p>
+        <div class="modal-acciones"><button class="btn btn-primario" type="button" id="calTermino">Sí, ya terminó</button><button class="btn btn-texto" type="button" id="cerrarCal">Todavía no</button></div>`
+      : `<h2>Primero contrátalo</h2>
+        <p>Solo pueden calificar los vecinos que contrataron a ${nom} desde Red Vecina. Así las opiniones vienen de vecinos reales.</p>
+        <div class="modal-acciones"><button class="btn btn-primario" type="button" id="calLlamar">${ICON.telefono} Llamar por Red Vecina</button><button class="btn btn-secundario" type="button" id="irContacto">Enviar solicitud</button><button class="btn btn-texto" type="button" id="cerrarCal">Cerrar</button></div>`;
     d.showModal();
     document.getElementById("cerrarCal").onclick = () => d.close();
-    document.getElementById("irContacto").onclick = () => { d.close(); abrirContacto(t); };
+    if(pend) document.getElementById("calTermino").onclick = () => { marcarTerminado(t, pend); d.close(); abrirCalificar(t, pend); };
+    else {
+      document.getElementById("calLlamar").onclick = () => { d.close(); abrirLlamada(t); };
+      document.getElementById("irContacto").onclick = () => { d.close(); abrirContacto(t); };
+    }
     return;
   }
   let nota = 0;
@@ -1410,7 +2016,11 @@ function abrirCalificar(t){
     const txt = document.getElementById("calTxt").value.trim() || "Sin comentario.";
     (resenasUsuario[t.id] = resenasUsuario[t.id] || []).push({a: usuario ? usuario.nombre : "Vecino de Red Vecina", tel: usuario ? usuario.tel : undefined, t: txt, c: nota, h: "Hace un momento"});
     store.set("resenas", resenasUsuario);
-    d.close(); if(vistaActual === "cuenta") pintarCuentaVista(); else pintarPerfil(t.id); toast("Calificación publicada. ¡Gracias!");
+    const serv = rec || misServicios().filter(s => s.tid === t.id && s.estado === "terminada" && !s.calif).pop();
+    if(serv){ serv.calif = nota; (serv.historial = serv.historial || []).push({e:"calificada", f:Date.now()}); guardarSolicitudes(); }
+    d.close();
+    if(vistaActual === "cuenta") pintarCuentaVista(); else if(vistaActual === "servicios") refrescar(); else pintarPerfil(t.id);
+    toast("Calificación publicada. ¡Gracias!");
   };
   d.showModal();
 }
@@ -1540,11 +2150,14 @@ document.getElementById("filtroCats").addEventListener("change", e => {
   if(e.target.checked) estado.cats.add(e.target.value); else estado.cats.delete(e.target.value);
   pintarResultados();
 });
-document.getElementById("filtroDist").onchange = e => { estado.dist = +e.target.value; pintarResultados(); };
+document.getElementById("filtroDist").onchange = e => { estado.dist = +e.target.value; pintarFiltros(); pintarResultados(); };
 document.getElementById("resS").onchange = e => { estado.comuna = +e.target.value || 0; pintarFiltros(); pintarResultados(); };
+document.getElementById("filtroComuna").onchange = e => { estado.comuna = +e.target.value || 0; pintarFiltros(); pintarResultados(); };
 document.getElementById("filtroRating").onchange = e => { estado.rating = +e.target.value; pintarResultados(); };
 document.getElementById("orden").onchange = e => { estado.orden = e.target.value; pintarResultados(); };
 document.getElementById("limpiar").onclick = limpiarFiltros;
+document.getElementById("filtroDisp").onchange = e => { estado.disp = e.target.checked; pintarResultados(); };
+document.querySelectorAll("[data-urgente]").forEach(b => b.onclick = abrirUrgente);
 document.getElementById("btnVolver").onclick = () => { location.hash = "buscar"; };
 
 /* ---------- Tema ---------- */
@@ -1560,21 +2173,23 @@ const filtrosEl = document.getElementById("filtros");
 if(filtrosEl && matchMedia("(max-width:900px)").matches) filtrosEl.open = false;
 
 /* ---------- Router ---------- */
-let vistaActual = "inicio";
+let vistaActual = "inicio", servActual = null;
 function refrescar(){
   const h = (location.hash || "#inicio").slice(1);
   let vista = h, id = null;
   if(h.startsWith("perfil-")){ vista = "perfil"; id = h.slice(7); }
+  if(h.startsWith("servicio-")){ vista = "servicios"; id = h.slice(9); }
   if(!document.querySelector(`[data-view="${vista}"]`)) vista = "inicio";
   // Con sesión iniciada no tiene sentido ver el login ni el registro
   if(usuario && (vista === "login" || vista === "registro" || (vista === "cuenta" && usuario.tid))){
     location.replace(usuario.tid ? "#perfil-" + usuario.tid : "#cuenta"); return;
   }
-  if(!usuario && vista === "cuenta"){ location.replace("#login"); return; }
+  if(!usuario && (vista === "cuenta" || vista === "servicios")){ location.replace("#login"); return; }
   if(usuario && usuario.tid && vista !== "nosotros" && !(vista === "perfil" && id === usuario.tid)){
     location.replace("#perfil-" + usuario.tid); return;
   }
-  const cambio = vista !== vistaActual || vista === "perfil";
+  const cambio = vista !== vistaActual || vista === "perfil" || (vista === "servicios" && id !== servActual);
+  servActual = vista === "servicios" ? id : null;
   vistaActual = vista;
   document.querySelectorAll(".vista").forEach(s => s.classList.toggle("activa", s.dataset.view === vista));
   const propio = vista === "perfil" && usuario && usuario.tid === id;
@@ -1585,6 +2200,7 @@ function refrescar(){
   if(vista === "perfil") pintarPerfil(id);
   if(vista === "favoritos") pintarFavoritos();
   if(vista === "cuenta") pintarCuentaVista();
+  if(vista === "servicios") pintarServicios(id);
   if(cambio) window.scrollTo(0,0);
 }
 window.addEventListener("hashchange", refrescar);
