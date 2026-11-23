@@ -598,7 +598,7 @@ dialog.dlg-foto::backdrop{background:rgba(0,0,0,.82);backdrop-filter:blur(4px)}
 
 /* ---------- Mis servicios ---------- */
 .solo-vecino{display:none !important}
-body.con-sesion:not(.modo-trabajador) nav.principal a.solo-vecino{display:inline-flex !important;align-items:center;gap:6px}
+body.con-sesion nav.principal a.solo-vecino{display:inline-flex !important;align-items:center;gap:6px}
 body.con-sesion:not(.modo-trabajador) .tabbar a.solo-vecino{display:flex !important}
 .nav-num{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--mango);color:var(--mango-texto);font-size:.7rem;font-weight:800;line-height:1}
 .nav-num[hidden]{display:none}
@@ -705,3 +705,24 @@ button.banda-servicio{width:100%;font:inherit;cursor:pointer;text-align:left}
   .sol-cab{grid-template-columns:40px 1fr}
   .sol-cab .estado-serv{grid-column:2;justify-self:start}
 }
+
+/* ---------- Mis servicios del trabajador ---------- */
+.serv-cifras{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.serv-cifras div{background:var(--surface);border:1px solid var(--borde);border-radius:16px;padding:14px 16px}
+.serv-cifras strong{display:block;font-size:1.6rem;line-height:1.1;color:var(--marca)}
+.serv-cifras span{font-size:.84rem;color:var(--texto-2)}
+.serv-lista.trab .sol-item{background:var(--surface);border:1px solid var(--borde);border-radius:18px;padding:16px}
+.serv-lista.trab .sol-item.cerrada{opacity:1}
+.sol-seg{margin-top:12px;border-top:1px dashed var(--borde);padding-top:8px}
+.sol-seg summary{cursor:pointer;font-weight:700;font-size:.86rem;color:var(--marca);padding:4px 0}
+.sol-seg .linea-tiempo{margin-top:10px}
+@media (max-width:560px){
+  .serv-cifras{gap:8px}
+  .serv-cifras div{padding:10px 12px}
+  .serv-cifras strong{font-size:1.25rem}
+  .serv-cifras span{font-size:.76rem}
+}
+/* Comentario que dejó el vecino al calificar */
+.coment-serv{display:block;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:.9rem;font-style:italic;overflow-wrap:anywhere}
+.coment-serv .estrella{font-style:normal;margin-right:4px}
+q.coment-serv{quotes:"«" "»"}

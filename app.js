@@ -506,6 +506,7 @@ function pintarCuenta(){
         <div class="menu-cuenta-nombre">${esc(usuario.nombre)}</div>
         <div class="menu-cuenta-rol">${esTrab ? "Trabajador · " + esc(catLabel((miTrabajador()||{}).cat || "otros")) : "Vecino"}</div>
         <button type="button" role="menuitem" id="mcPerfil">${esTrab ? "Ver mi perfil" : "Mi cuenta"}</button>
+        ${esTrab ? `<button type="button" role="menuitem" id="mcServicios">Mis servicios</button>` : ""}
         <button type="button" role="menuitem" id="mcEditar">${esTrab ? "Editar perfil" : "Editar mis datos"}</button>
         ${esTrab ? `<button type="button" role="menuitem" id="mcDescargar">Descargar copia de mi perfil</button>` : ""}
         <hr>
@@ -514,6 +515,7 @@ function pintarCuenta(){
     const btn = document.getElementById("btnCuenta"), menu = document.getElementById("menuCuenta");
     btn.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; btn.setAttribute("aria-expanded", String(!menu.hidden)); };
     document.getElementById("mcPerfil").onclick = () => { cerrarMenuCuenta(); location.hash = esTrab ? "perfil-" + usuario.tid : "cuenta"; };
+    if(esTrab) document.getElementById("mcServicios").onclick = () => { cerrarMenuCuenta(); location.hash = "servicios"; };
     document.getElementById("mcEditar").onclick = () => { cerrarMenuCuenta(); abrirEditar(); };
     if(esTrab) document.getElementById("mcDescargar").onclick = () => { cerrarMenuCuenta(); descargarPerfil(); };
     document.getElementById("mcSalir").onclick = () => {
@@ -1041,7 +1043,7 @@ function pintarPerfil(id){
           ${esMio ? "" : `<button class="btn btn-secundario btn-chico" type="button" id="btnCalificar">Calificar</button>`}
         </div>
         <div style="font-size:.9rem;margin-bottom:6px"><span class="estrella">${estrellas}</span> <strong>${n?fmtR(r):"—"}</strong> <span style="color:var(--texto-2)">${n?`(${n} opiniones)`:"Aún sin opiniones"}</span></div>
-        ${todasRes.map(x=>`<div class="resena"><div class="ini">${iniciales(x.a)}</div><div><strong style="font-size:.86rem">${esc(x.a)}</strong> <span class="estrella" style="font-size:.8rem">${"★".repeat(x.c)}</span><p>${esc(x.t)}</p><small>${esc(x.h)}</small> · <span class="verificada">Contrató por Red Vecina</span></div></div>`).join("")
+        ${todasRes.map(x=>`<div class="resena"><div class="ini">${iniciales(x.a)}</div><div><strong style="font-size:.86rem">${esc(x.a)}</strong> <span class="estrella" style="font-size:.8rem">${"★".repeat(x.c)}</span><p>${esc(x.t)}</p><small>${esc(haceCuanto(x))}</small> · <span class="verificada">Contrató por Red Vecina</span></div></div>`).join("")
           || `<p class="texto-vacio">${esMio ? "Cuando un vecino te contrate por Red Vecina y te califique, su opinión aparecerá aquí." : "Sé el primer vecino en calificar después de contratar."}</p>`}
       </div>
     </div>
@@ -1481,7 +1483,7 @@ function pintarCuentaVista(){
       </div>
       <div class="panel">
         <div class="panel-cab"><h2>Tus opiniones</h2><span class="contador">${misRes.length}</span></div>
-        ${misRes.length ? misRes.map(({t,x}) => `<div class="resena"><div class="ini">${iniciales(t.nombre)}</div><div><a href="#perfil-${t.id}"><strong style="font-size:.86rem">${esc(t.nombre)}</strong></a> <span class="estrella" style="font-size:.8rem">${"★".repeat(x.c)}</span><p>${esc(x.t)}</p><small>${esc(x.h)}</small></div></div>`).join("")
+        ${misRes.length ? misRes.map(({t,x}) => `<div class="resena"><div class="ini">${iniciales(t.nombre)}</div><div><a href="#perfil-${t.id}"><strong style="font-size:.86rem">${esc(t.nombre)}</strong></a> <span class="estrella" style="font-size:.8rem">${"★".repeat(x.c)}</span><p>${esc(x.t)}</p><small>${esc(haceCuanto(x))}</small></div></div>`).join("")
           : `<p class="texto-vacio">Aún no has calificado a nadie. Tus opiniones ayudan a otros vecinos a elegir bien.</p>`}
       </div>
     </div>
@@ -1521,6 +1523,17 @@ const estadoServ = s => s.estado === "terminada" && s.calif ? {txt:"Calificado",
 // Paso del 0 al 3: contacto → acordado → terminado → calificado
 const pasoServ = s => s.calif ? 3 : s.estado === "terminada" ? 2 : s.estado === "acordada" ? 1 : 0;
 const fechaDe = (s, e) => { const h = (s.historial || []).filter(x => x.e === e).pop(); return h ? h.f : (e === "enviada" ? s.creada : null); };
+function haceCuanto(x){
+  if(!x.f) return x.h || "";
+  const min = Math.round((Date.now() - x.f) / 6e4), dias = Math.floor(min / 1440);
+  if(min < 2) return "Hace un momento";
+  if(min < 60) return `Hace ${min} minutos`;
+  if(min < 1440){ const h = Math.round(min / 60); return h === 1 ? "Hace 1 hora" : `Hace ${h} horas`; }
+  if(dias === 1) return "Ayer";
+  if(dias < 7) return `Hace ${dias} días`;
+  if(dias < 30){ const sem = Math.floor(dias / 7); return sem === 1 ? "Hace 1 semana" : `Hace ${sem} semanas`; }
+  const mes = Math.floor(dias / 30); return mes === 1 ? "Hace 1 mes" : `Hace ${mes} meses`;
+}
 function fmtCuando(f){
   const d = new Date(f), hoy = new Date(), ayer = new Date(Date.now() - 864e5);
   const hora = d.toLocaleTimeString("es-CO", {hour:"numeric", minute:"2-digit"});
@@ -1529,7 +1542,8 @@ function fmtCuando(f){
   return `${d.toLocaleDateString("es-CO", {day:"numeric", month:"short"})}, ${hora}`;
 }
 function pintarNumServicios(){
-  const n = misServicios().filter(s => ACTIVOS.includes(s.estado)).length;
+  const t = usuario && usuario.tid ? miTrabajador() : null;
+  const n = (t ? solicitudesPara(t) : misServicios()).filter(s => ACTIVOS.includes(s.estado)).length;
   document.querySelectorAll("[data-serv-num]").forEach(el => { el.textContent = n; el.hidden = !n; });
   document.body.classList.toggle("con-sesion", !!usuario);
 }
@@ -1552,6 +1566,7 @@ function tarjetaServicio(s){
 let tabServ = "curso";
 function pintarServicios(id){
   const cont = document.getElementById("serviciosCont");
+  if(usuario && usuario.tid) return pintarServiciosTrab(cont, id);
   const todosS = misServicios().slice().sort((a,b) => b.creada - a.creada);
   if(id) return pintarDetalleServicio(cont, todosS.find(s => s.id === id));
   const curso = todosS.filter(s => ACTIVOS.includes(s.estado)), hist = todosS.filter(s => !ACTIVOS.includes(s.estado));
@@ -1572,6 +1587,44 @@ function pintarServicios(id){
   cont.querySelectorAll("[data-urgente]").forEach(b => b.onclick = abrirUrgente);
 }
 
+/* Mis servicios del trabajador: trabajos en curso e historial, con sus números */
+function pintarServiciosTrab(cont, id){
+  const t = miTrabajador(); if(!t){ cont.innerHTML = ""; return; }
+  const todas = solicitudesPara(t);
+  const curso = todas.filter(s => ACTIVOS.includes(s.estado)), hist = todas.filter(s => !ACTIVOS.includes(s.estado));
+  const hechos = todas.filter(s => s.estado === "terminada"), califs = hechos.filter(s => s.calif).map(s => s.calif);
+  const prom = califs.length ? califs.reduce((a,b) => a + b, 0) / califs.length : 0;
+  const repintar = () => pintarServicios(id);
+  if(id){
+    const s = todas.find(x => x.id === id);
+    cont.innerHTML = `<a class="volver" href="#servicios">← Mis servicios</a>${s ? `<div class="serv-lista trab" id="listaTrab">${itemSolicitud(s)}</div>`
+      : `<div class="vacio"><strong>No encontramos este servicio.</strong><br><a href="#servicios">Ver todos tus servicios</a></div>`}`;
+    if(s){ cont.querySelector(".sol-seg").open = true; conectarSolicitudes(t, document.getElementById("listaTrab"), repintar); }
+    return;
+  }
+  const lista = tabServ === "curso" ? curso : hist;
+  const nuevas = curso.filter(s => s.estado === "enviada").length;
+  cont.innerHTML = `<a class="volver" href="#perfil-${t.id}">← Mi perfil</a>
+    <div class="serv-cab">
+      <div><h1>Mis servicios</h1><p>Los trabajos que te piden los vecinos: los que tienes en curso y los que ya cerraste.</p></div>
+    </div>
+    <div class="serv-cifras">
+      <div><strong>${curso.length}</strong><span>En curso${nuevas ? ` · ${nuevas} ${nuevas === 1 ? "nueva" : "nuevas"}` : ""}</span></div>
+      <div><strong>${hechos.length}</strong><span>Terminados</span></div>
+      <div><strong>${califs.length ? fmtR(prom) + " ★" : "—"}</strong><span>${califs.length ? `Promedio de ${califs.length} ${califs.length === 1 ? "calificación" : "calificaciones"}` : "Aún sin calificaciones"}</span></div>
+    </div>
+    <div class="serv-tabs" role="tablist">
+      <button type="button" role="tab" data-tab="curso" aria-selected="${tabServ==="curso"}">En curso <span class="contador">${curso.length}</span></button>
+      <button type="button" role="tab" data-tab="hist" aria-selected="${tabServ==="hist"}">Historial <span class="contador">${hist.length}</span></button>
+    </div>
+    <div class="serv-lista trab" id="listaTrab">${lista.length ? lista.map(itemSolicitud).join("") : `<div class="vacio">
+      <strong>${tabServ === "curso" ? "No tienes trabajos en curso." : "Aún no tienes trabajos cerrados."}</strong><br>
+      ${tabServ === "curso" ? "Cuando un vecino te pida un trabajo, lo verás aquí. Mantente como <strong>Disponible ahora</strong> para aparecer primero." : "Aquí quedan los trabajos terminados, cancelados, sin acuerdo o que no pudiste tomar."}</div>`}</div>
+    <p class="nota-sol" style="padding-bottom:40px">Ves el nombre y el barrio del vecino, nunca su celular ni su dirección exacta. Todo se habla por Red Vecina.</p>`;
+  cont.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tabServ = b.dataset.tab; pintarServicios(); });
+  conectarSolicitudes(t, document.getElementById("listaTrab"), repintar);
+}
+
 function pintarDetalleServicio(cont, s){
   if(!s){ cont.innerHTML = `<a class="volver" href="#servicios">← Mis servicios</a><div class="vacio"><strong>No encontramos este servicio.</strong><br><a href="#servicios">Ver todos tus servicios</a></div>`; return; }
   const t = buscarT(s.tid), nom = esc(primerNombre(t)), {r, n} = ratingDe(t);
@@ -1584,7 +1637,7 @@ function pintarDetalleServicio(cont, s){
     {t: TIPOS[s.tipo] || "Contacto", d: contacto, f: s.creada},
     {t: "Servicio acordado", d: p >= 1 ? "Acordaron precio y hora por Red Vecina." : `Hablen por Red Vecina y acuerden precio y hora.`, f: fechaDe(s, "acordada")},
     {t: "Trabajo terminado", d: p >= 2 ? `Confirmaste que ${nom} terminó el trabajo.` : s.trabTermino ? `${nom} marcó el trabajo como terminado. Falta tu confirmación.` : `Confírmalo aquí cuando ${nom} termine.`, f: fechaDe(s, "terminada")},
-    {t: "Calificación", d: s.calif ? `Le diste ${"★".repeat(s.calif)}` : "Tu opinión ayuda a otros vecinos.", f: fechaDe(s, "calificada")}
+    {t: "Calificación", d: s.calif ? `Le diste ${"★".repeat(s.calif)}${s.comentario ? `<q class="coment-serv">${esc(s.comentario)}</q>` : ""}` : "Tu opinión ayuda a otros vecinos.", f: fechaDe(s, "calificada")}
   ];
   const finPaso = fin ? {t: ESTADOS[s.estado].txt, d: {cancelada:"Cancelaste este servicio.", "sin-acuerdo":"No llegaron a un acuerdo en la llamada.", rechazada:`${nom} no puede tomar este trabajo.`}[s.estado], f: fechaDe(s, s.estado)} : null;
   const linea = (fin ? pasos.slice(0, p + 1).concat(finPaso) : pasos).map((x, i) => {
@@ -1718,10 +1771,36 @@ function itemSolicitud(s){
       <span class="estado-serv ${e.cls}">${e.txt}</span>
     </div>
     ${s.desc ? `<p class="sol-desc">${esc(s.desc)}</p>` : ""}
+    ${s.calif ? `<div class="coment-serv"><span class="estrella">${"★".repeat(s.calif)}</span> ${s.comentario ? `«${esc(s.comentario)}»` : "Te calificó sin dejar comentario."}</div>` : ""}
     <div class="sol-meta">${s.tipo === "urgente" ? `<span class="sol-urgente">⚡ Urgente</span>` : ""}<span>${TIPOS[s.tipo] || "Solicitud"} · ${fmtCuando(s.creada)}</span>
       ${s.fecha ? `<span>Para el ${esc(fmtFecha(s.fecha))} · ${esc((FRANJAS[s.franja] || "").toLowerCase())}</span>` : ""}</div>
     ${acciones ? `<div class="modal-acciones">${acciones}</div>` : ""}
+    <details class="sol-seg"><summary>Ver seguimiento</summary><ol class="linea-tiempo">${lineaTrab(s)}</ol></details>
   </div>`;
+}
+
+// Historial del servicio contado desde el lado del trabajador
+function lineaTrab(s){
+  const nomV = esc(vecinoDe(s).nombre.split(" ")[0]);
+  const txt = {
+    enviada: s.tipo === "urgente" ? `${nomV} pidió ayuda urgente` : s.tipo === "llamada" ? `${nomV} te llamó por Red Vecina` : `${nomV} te envió una solicitud`,
+    respondida: "Dijiste que estás disponible",
+    acordada: "Acordaron el servicio",
+    "trab-termino": "Marcaste el trabajo como terminado",
+    terminada: `${nomV} confirmó que el trabajo quedó bien`,
+    calificada: `${nomV} te calificó ${"★".repeat(s.calif || 0)}`,
+    "sin-acuerdo": "No llegaron a un acuerdo",
+    cancelada: `${nomV} canceló el servicio`,
+    rechazada: "Dijiste que no podías atenderlo"
+  };
+  const hist = (s.historial && s.historial.length ? s.historial : [{e:"enviada", f:s.creada}]).filter(x => txt[x.e]);
+  const fin = FINALES.includes(s.estado);
+  return hist.map((x, i) => {
+    const ultimo = i === hist.length - 1;
+    const cls = ultimo && fin ? "fin" : ultimo && ACTIVOS.includes(s.estado) ? "actual" : "hecho";
+    const extra = x.e === "calificada" && s.comentario ? `<p>«${esc(s.comentario)}»</p>` : "";
+    return `<li class="${cls}"><span class="tl-punto" aria-hidden="true"></span><div><strong>${txt[x.e]}</strong>${extra}<small>${fmtCuando(x.f)}</small></div></li>`;
+  }).join("");
 }
 
 function panelSolicitudes(t){
@@ -1732,17 +1811,18 @@ function panelSolicitudes(t){
     ${activas.length ? activas.map(itemSolicitud).join("")
       : `<p class="texto-vacio">Aún no tienes solicitudes activas. Cuando un vecino te pida un trabajo, aparecerá aquí. Mantente como <strong>Disponible ahora</strong> para aparecer primero en las búsquedas.</p>`}
     ${cerradas.length ? `<details class="sol-hist"><summary>Historial (${cerradas.length})</summary>${cerradas.map(itemSolicitud).join("")}</details>` : ""}
+    ${todas.length ? `<a class="btn btn-borde btn-chico" href="#servicios" style="margin-top:12px">Ver mis servicios e historial</a>` : ""}
     <p class="nota-sol" style="margin-top:12px">Ves el nombre y el barrio del vecino, nunca su celular ni su dirección exacta. Todo se habla por Red Vecina.</p>
   </div>`;
 }
 
-function conectarSolicitudes(t){
-  const panel = document.getElementById("panelSol"); if(!panel) return;
+function conectarSolicitudes(t, panel = document.getElementById("panelSol"), repintar = () => pintarPerfil(t.id)){
+  if(!panel) return;
   panel.querySelectorAll("[data-sacc]").forEach(b => {
     b.type = "button";
     const s = solicitudes.find(x => x.id === b.closest("[data-sol]").dataset.sol), nomV = vecinoDe(s).nombre.split(" ")[0];
     b.onclick = {
-      disponible: () => { cambiarEstado(s, "respondida"); pintarPerfil(t.id); toast(`Le avisamos a ${nomV} que estás disponible. Llámalo para acordar el servicio.`); },
+      disponible: () => { cambiarEstado(s, "respondida"); repintar(); toast(`Le avisamos a ${nomV} que estás disponible. Llámalo para acordar el servicio.`); },
       llamar: () => llamarVecino(s),
       rechazar: () => {
         const c = mostrarDlgC(`<h2>¿No puedes atender a ${esc(nomV)}?</h2><p>Le avisaremos para que busque a otro trabajador. No afecta tu calificación.</p>
@@ -1750,7 +1830,7 @@ function conectarSolicitudes(t){
         c.querySelector("#siRechazar").onclick = () => { cambiarEstado(s, "rechazada"); dlgC.close(); toast(`Le avisamos a ${nomV}.`); };
       },
       termine: () => { s.trabTermino = Date.now(); (s.historial = s.historial || []).push({e:"trab-termino", f:s.trabTermino}); guardarSolicitudes();
-        pintarPerfil(t.id); toast(`Listo. Le pedimos a ${nomV} que confirme el trabajo.`); }
+        repintar(); toast(`Listo. Le pedimos a ${nomV} que confirme el trabajo.`); }
     }[b.dataset.sacc];
   });
 }
@@ -2099,7 +2179,7 @@ function abrirCalificar(t, rec){   // rec: el servicio que se califica (si no se
   c.innerHTML = `<h2>¿Cómo te fue con ${esc(t.nombre.split(" ")[0])}?</h2>
     <p>Tu opinión ayuda al siguiente vecino que tenga el mismo problema.</p>
     <div class="estrellas-input" role="radiogroup" aria-label="Calificación">${[1,2,3,4,5].map(i=>`<button type="button" role="radio" aria-checked="false" aria-label="${i} de 5" data-e="${i}">★</button>`).join("")}</div>
-    <div class="campo"><label for="calTxt">Comentario</label><textarea id="calTxt" placeholder="Ej. Llegó a tiempo y dejó todo funcionando."></textarea></div>
+    <div class="campo"><label for="calTxt">Comentario</label><textarea id="calTxt" maxlength="500" placeholder="Ej. Llegó a tiempo y dejó todo funcionando."></textarea></div>
     <div class="error" id="calErr">Elige de 1 a 5 estrellas.</div>
     <div class="modal-acciones"><button class="btn btn-primario" type="button" id="publicarCal">Publicar calificación</button><button class="btn btn-texto" type="button" id="cerrarCal">Cancelar</button></div>`;
   c.querySelectorAll("[data-e]").forEach(b => b.onclick = () => {
@@ -2110,11 +2190,13 @@ function abrirCalificar(t, rec){   // rec: el servicio que se califica (si no se
   document.getElementById("cerrarCal").onclick = () => d.close();
   document.getElementById("publicarCal").onclick = () => {
     if(!nota){ document.getElementById("calErr").style.display = "block"; return; }
-    const txt = document.getElementById("calTxt").value.trim() || "Sin comentario.";
-    (resenasUsuario[t.id] = resenasUsuario[t.id] || []).push({a: usuario ? usuario.nombre : "Vecino de Red Vecina", tel: usuario ? usuario.tel : undefined, t: txt, c: nota, h: "Hace un momento"});
-    store.set("resenas", resenasUsuario);
+    const coment = sinContacto(document.getElementById("calTxt").value.trim());   // sin celulares ni correos
+    const ahora = Date.now();
     const serv = rec || misServicios().filter(s => s.tid === t.id && s.estado === "terminada" && !s.calif).pop();
-    if(serv){ serv.calif = nota; (serv.historial = serv.historial || []).push({e:"calificada", f:Date.now()}); guardarSolicitudes(); }
+    (resenasUsuario[t.id] = resenasUsuario[t.id] || []).push({a: usuario ? usuario.nombre : "Vecino de Red Vecina", tel: usuario ? usuario.tel : undefined,
+      t: coment || "Sin comentario.", c: nota, f: ahora, sid: serv ? serv.id : undefined});
+    store.set("resenas", resenasUsuario);
+    if(serv){ serv.calif = nota; if(coment) serv.comentario = coment; (serv.historial = serv.historial || []).push({e:"calificada", f:ahora}); guardarSolicitudes(); }
     d.close();
     if(vistaActual === "cuenta") pintarCuentaVista(); else if(vistaActual === "servicios") refrescar(); else pintarPerfil(t.id);
     toast("Calificación publicada. ¡Gracias!");
@@ -2282,7 +2364,7 @@ function refrescar(){
     location.replace(usuario.tid ? "#perfil-" + usuario.tid : "#cuenta"); return;
   }
   if(!usuario && (vista === "cuenta" || vista === "servicios")){ location.replace("#login"); return; }
-  if(usuario && usuario.tid && vista !== "nosotros" && !(vista === "perfil" && id === usuario.tid)){
+  if(usuario && usuario.tid && vista !== "nosotros" && vista !== "servicios" && !(vista === "perfil" && id === usuario.tid)){
     location.replace("#perfil-" + usuario.tid); return;
   }
   const cambio = vista !== vistaActual || vista === "perfil" || (vista === "servicios" && id !== servActual);
