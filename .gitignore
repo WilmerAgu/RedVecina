@@ -1,1 +1,4 @@
 perfil-*.json
+
+# Configuración personal del editor
+.vscode/
